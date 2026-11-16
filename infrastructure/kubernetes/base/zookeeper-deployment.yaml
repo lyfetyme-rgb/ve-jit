@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vejit-zookeeper
+  namespace: vejit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vejit-zookeeper
+  template:
+    metadata:
+      labels:
+        app: vejit-zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:7.5.0

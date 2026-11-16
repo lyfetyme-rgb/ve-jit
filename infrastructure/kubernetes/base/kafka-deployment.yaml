@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vejit-kafka
+  namespace: vejit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vejit-kafka
+  template:
+    metadata:
+      labels:
+        app: vejit-kafka
+    spec:
+      containers:
+      - name: kafka
+        image: confluentinc/cp-kafka:7.5.0

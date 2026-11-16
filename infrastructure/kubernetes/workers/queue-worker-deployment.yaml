@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vejit-queue-worker
+  namespace: vejit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vejit-queue-worker
+  template:
+    metadata:
+      labels:
+        app: vejit-queue-worker
+    spec:
+      containers:
+      - name: queue-worker
+        image: vejit-backend:4.1.0
+        command: ["python", "-m", "app.workers.queue_worker"]
+        env:
+        - name: REDIS_URL
+          value: redis://vejit-redis:6379/0
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: vejit-kafka:9092

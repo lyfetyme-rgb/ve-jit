@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VE-JIT Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>VE-JIT Enterprise Dashboard</h1>
+    <div id="healthBadge" class="badge">Loading...</div>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <h2>System Health</h2>
+      <pre id="healthOutput">Loading...</pre>
+    </section>
+
+    <section class="card">
+      <h2>Queue Recommendation</h2>
+      <pre id="queueOutput">Loading...</pre>
+    </section>
+
+    <section class="card">
+      <h2>JIT Demo Decision</h2>
+      <pre id="jitOutput">Loading...</pre>
+    </section>
+
+    <section class="card">
+      <h2>Inventory</h2>
+      <button id="seedBtn">Create Demo SKU</button>
+      <button id="listBtn">Refresh Inventory</button>
+      <pre id="inventoryOutput">[]</pre>
+    </section>
+
+    <section class="card span-2">
+      <h2>IoT Event Normalizer</h2>
+      <button id="iotBtn">Normalize Demo Event</button>
+      <pre id="iotOutput">Waiting...</pre>
+    </section>
+<section class="card span-2">
+  <h2>Network Intelligence Insights</h2>
+  <pre id="networkOutput">Loading...</pre>
+</section>
+
+<section class="card span-2">
+  <h2>Peer Percentile Benchmark</h2>
+  <pre id="percentileOutput">Loading...</pre>
+</section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

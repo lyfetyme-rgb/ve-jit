@@ -1,0 +1,16 @@
+resources:
+  - base/namespace.yaml
+  - base/backend-deployment.yaml
+  - base/backend-service.yaml
+  - workers/queue-worker-deployment.yaml
+  - workers/network-worker-deployment.yaml
+  - base/redis-deployment.yaml
+  - base/redis-service.yaml
+  - base/zookeeper-deployment.yaml
+  - base/zookeeper-service.yaml
+  - base/kafka-deployment.yaml
+  - base/kafka-service.yaml
+  - monitoring/prometheus-deployment.yaml
+  - monitoring/prometheus-service.yaml
+  - monitoring/grafana-deployment.yaml
+  - monitoring/grafana-service.yaml

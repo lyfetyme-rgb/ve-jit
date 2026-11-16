@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vejit-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=VE-JIT Platform
+      - APP_VERSION=4.1.0
+      - DEBUG=false
+      - STORE_ID=store_001
+      - DATABASE_URL=sqlite:///./vejit.db
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - vejit-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - vejit_data:/app
+
+  queue-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vejit-queue-worker
+    command: ["python", "-m", "app.workers.queue_worker"]
+    environment:
+      - STORE_ID=store_001
+      - DATABASE_URL=sqlite:///./vejit.db
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - vejit-network
+    restart: unless-stopped
+
+  network-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vejit-network-worker
+    command: ["python", "-m", "app.workers.network_worker"]
+    environment:
+      - STORE_ID=store_001
+      - DATABASE_URL=sqlite:///./vejit.db
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - vejit-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: vejit-redis
+    command: redis-server --appendonly yes --maxmemory 512mb
+    ports:
+      - "6379:6379"
+    networks:
+      - vejit-network
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: vejit-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - vejit-network
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: vejit-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - vejit-network
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: vejit-prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - vejit-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: vejit-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    networks:
+      - vejit-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+networks:
+  vejit-network:
+    driver: bridge
+
+volumes:
+  vejit_data:

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vejit-backend
+  namespace: vejit-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vejit-backend
+  template:
+    metadata:
+      labels:
+        app: vejit-backend
+    spec:
+      containers:
+      - name: backend
+        image: vejit-backend:4.1.0
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          value: sqlite:///./vejit.db
+        - name: REDIS_URL
+          value: redis://vejit-redis:6379/0
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: vejit-kafka:9092
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 20

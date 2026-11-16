@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vejit-network-worker
+  namespace: vejit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vejit-network-worker
+  template:
+    metadata:
+      labels:
+        app: vejit-network-worker
+    spec:
+      containers:
+      - name: network-worker
+        image: vejit-backend:4.1.0
+        command: ["python", "-m", "app.workers.network_worker"]
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: vejit-kafka:9092

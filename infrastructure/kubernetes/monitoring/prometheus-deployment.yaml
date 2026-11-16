@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vejit-prometheus
+  namespace: vejit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vejit-prometheus
+  template:
+    metadata:
+      labels:
+        app: vejit-prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
