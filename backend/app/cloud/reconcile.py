@@ -29,7 +29,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.cloud.models import (
-    CloudInventory,
+    CloudStoreInventory,
     CloudIngestedEvent,
     CloudReconciliationQuarantine,
     CloudStoreWatermark,
@@ -133,14 +133,14 @@ def ingest_recovery_batch(
 
             if action == "quarantine":
                 reason = verdict.get("reason", "sync-go classified this event as non-commutative")
-                _quarantine(db, tenant_id, store_id, recovery_session_id, event_id, reason, event)
+                _quarantine(db, tenant_id, store_id, recovery_session_id, [event_id], reason, event)
                 quarantined += 1
             elif action == "commutative":
                 continue  # aggregate applied in pass 2
             elif event.get("event_type") == "pos.transaction.completed":
                 continue  # included in the aggregate pass
             else:
-                _quarantine(db, tenant_id, store_id, recovery_session_id, event_id, reason, event)
+                _quarantine(db, tenant_id, store_id, recovery_session_id, [event_id], reason, event)
                 quarantined += 1
 
         # Pass 2: aggregate SALE deltas over fresh, non-quarantined events only,
@@ -154,33 +154,36 @@ def ingest_recovery_batch(
             for sku, delta_record in per_sku.items():
                 delta = int(delta_record["delta"])
                 row = (
-                    db.query(CloudInventory)
+                    db.query(CloudStoreInventory)
                     .filter(
-                        CloudInventory.tenant_id == tenant_id,
-                        CloudInventory.store_id == store_id,
-                        CloudInventory.sku == sku,
+                        CloudStoreInventory.tenant_id == tenant_id,
+                        CloudStoreInventory.store_id == store_id,
+                        CloudStoreInventory.sku == sku,
                     )
                     .first()
                 )
                 if row is None:
                     _quarantine(
                         db, tenant_id, store_id, recovery_session_id,
-                        f"nobase:{sku}", f"no cloud baseline for {sku}; cannot apply SALE delta {delta}",
-                        {"sku": sku, "delta": delta, "kind": "SALE", "source_event_ids": delta_record["source_event_ids"]},
+                        delta_record["source_event_ids"], f"no cloud baseline for {sku}; cannot apply SALE delta {delta}",
+                        {"sku": sku, "delta": delta, "kind": "SALE"},
+                        sku=sku, edge_delta_qty=delta,
                     )
                     quarantined += 1
                     continue
-                if row.quantity + delta < 0:
+                if row.on_hand_qty + delta < 0:
                     _quarantine(
                         db, tenant_id, store_id, recovery_session_id,
-                        f"oversell:{sku}", f"applying {delta} to {sku} would drive on-hand negative ({row.quantity})",
-                        {"sku": sku, "delta": delta, "kind": "SALE", "source_event_ids": delta_record["source_event_ids"]},
+                        delta_record["source_event_ids"],
+                        f"applying {delta} to {sku} would drive on-hand negative ({row.on_hand_qty})",
+                        {"sku": sku, "delta": delta, "kind": "SALE"},
+                        sku=sku, edge_delta_qty=delta, current_cloud_qty=row.on_hand_qty,
                     )
                     quarantined += 1
                     continue
                 from app.planes.operations import cas_update
 
-                cas_update(db, CloudInventory, row.id, row.version, {"quantity": row.quantity + delta})
+                cas_update(db, CloudStoreInventory, row.id, row.version, {"on_hand_qty": row.on_hand_qty + delta})
                 applied_deltas[sku] = delta
 
         max_seq = max(seqs)
@@ -237,22 +240,22 @@ def _apply_quarantined_payload(db: Session, row: CloudReconciliationQuarantine, 
     rows = []
     for sku, delta in deltas:
         inv = (
-            db.query(CloudInventory)
+            db.query(CloudStoreInventory)
             .filter(
-                CloudInventory.tenant_id == row.tenant_id,
-                CloudInventory.store_id == row.store_id,
-                CloudInventory.sku == sku,
+                CloudStoreInventory.tenant_id == row.tenant_id,
+                CloudStoreInventory.store_id == row.store_id,
+                CloudStoreInventory.sku == sku,
             )
             .first()
         )
         if inv is None:
             raise ReconcileError(409, f"no cloud baseline for {sku}; seed it first (POST /api/v1/cloud/inventory/seed)")
-        if inv.quantity + delta < 0:
-            raise ReconcileError(409, f"applying would drive on-hand negative for {sku} ({inv.quantity} {delta:+d})")
+        if inv.on_hand_qty + delta < 0:
+            raise ReconcileError(409, f"applying would drive on-hand negative for {sku} ({inv.on_hand_qty} {delta:+d})")
         rows.append((inv, delta))
 
     for inv, delta in rows:
-        cas_update(db, CloudInventory, inv.id, inv.version, {"quantity": inv.quantity + delta})
+        cas_update(db, CloudStoreInventory, inv.id, inv.version, {"on_hand_qty": inv.on_hand_qty + delta})
     return True
 
 
@@ -268,17 +271,23 @@ def resolve_quarantine(
 
     from app.planes.operations import cas_update
 
+    _DECISION_MAP = {"apply": "APPROVED_APPLY", "discard": "REJECTED_VOID"}
+    decision = _DECISION_MAP.get(resolution, resolution)
+    if decision not in ("APPROVED_APPLY", "REJECTED_VOID"):
+        raise ReconcileError(422, "resolution must be APPROVED_APPLY or REJECTED_VOID")
+
     row = (
         db.query(CloudReconciliationQuarantine)
         .filter(CloudReconciliationQuarantine.quarantine_id == quarantine_id)
+        .with_for_update()
         .first()
     )
     if row is None:
         raise ReconcileError(404, f"quarantine item {quarantine_id} not found")
-    if row.resolved_at is not None:
-        return {"ok": True, "quarantine_id": row.quarantine_id, "changed": False, "resolution": row.resolution}
+    if row.status != "PENDING_REVIEW":
+        raise ReconcileError(409, f"Already resolved with status {row.status}")
 
-    if resolution == "apply":
+    if decision == "APPROVED_APPLY":
         try:
             payload = json.loads(row.payload)
         except ValueError:
@@ -287,13 +296,21 @@ def resolve_quarantine(
         if not applied:
             raise ReconcileError(422, "quarantine payload carries no applicable inventory delta")
 
-    row.resolved_at = datetime.now(timezone.utc)
-    row.resolved_by = actor.strip()
-    row.resolution = resolution
+    row.status = decision
+    row.reviewed_at = datetime.now(timezone.utc)
+    row.reviewed_by = actor.strip()
+    row.resolution = decision
+    row.resolution_note = note
     if note:
         row.reason = f"{row.reason} | resolution note: {note}"
     db.commit()
-    return {"ok": True, "quarantine_id": row.quarantine_id, "changed": True, "resolution": resolution, "resolved_by": actor.strip()}
+    return {
+        "quarantine_id": row.quarantine_id,
+        "status": row.status,
+        "reviewed_by": row.reviewed_by,
+        "ok": True,
+        "changed": True,
+    }
 
 
 def quarantine_to_dict(row: CloudReconciliationQuarantine) -> dict:
@@ -306,14 +323,20 @@ def quarantine_to_dict(row: CloudReconciliationQuarantine) -> dict:
         "tenant_id": row.tenant_id,
         "store_id": row.store_id,
         "recovery_session_id": row.recovery_session_id,
-        "source_event_id": row.source_event_id,
+        "sku": row.sku,
+        "source_event_ids": json.loads(row.source_event_ids),
         "verdict": row.verdict,
-        "reason": row.reason,
+        "conflict_reason": row.reason,
+        "edge_delta_qty": row.edge_delta_qty,
+        "baseline_cloud_qty": row.baseline_cloud_qty,
+        "current_cloud_qty": row.current_cloud_qty,
+        "status": row.status,
         "payload": payload,
         "created_at": row.created_at.isoformat() if row.created_at else None,
-        "resolved_at": row.resolved_at.isoformat() if row.resolved_at else None,
-        "resolved_by": row.resolved_by,
+        "reviewed_at": row.reviewed_at.isoformat() if row.reviewed_at else None,
+        "reviewed_by": row.reviewed_by,
         "resolution": row.resolution,
+        "resolution_note": row.resolution_note,
     }
 
 
@@ -363,18 +386,30 @@ def _quarantine(
     tenant_id: str,
     store_id: str,
     recovery_session_id: str,
-    source_event_id: str,
+    source_event_ids,
     reason: str,
     payload: Any,
     verdict: str = "quarantine",
-) -> None:
-    db.add(CloudReconciliationQuarantine(
-        quarantine_id=f"q_{uuid.uuid4().hex[:16]}",
+    sku: Optional[str] = None,
+    edge_delta_qty: int = 0,
+    current_cloud_qty: Optional[int] = None,
+    baseline_cloud_qty: Optional[int] = None,
+) -> CloudReconciliationQuarantine:
+    event_ids = [str(e) for e in (source_event_ids if isinstance(source_event_ids, (list, tuple)) else [source_event_ids])]
+    quarantine = CloudReconciliationQuarantine(
+        quarantine_id=f"quar_{recovery_session_id}_{sku or uuid.uuid4().hex[:8]}",
         tenant_id=tenant_id,
         store_id=store_id,
         recovery_session_id=recovery_session_id,
-        source_event_id=str(source_event_id)[:64] or "unknown",
+        sku=sku,
+        source_event_ids=json.dumps(event_ids),
         reason=str(reason)[:2000],
         payload=json.dumps(payload, sort_keys=True, default=str),
         verdict=verdict,
-    ))
+        edge_delta_qty=edge_delta_qty,
+        baseline_cloud_qty=baseline_cloud_qty,
+        current_cloud_qty=current_cloud_qty,
+        status="PENDING_REVIEW",
+    )
+    db.add(quarantine)
+    return quarantine

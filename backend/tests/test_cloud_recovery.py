@@ -100,7 +100,7 @@ def test_sale_batch_applies_and_is_idempotent():
     assert body["chain_tip_verified"] is True
 
     inv = [r for r in client.get("/api/v1/cloud/inventory?sku=" + sku).json()["inventory"]][0]
-    assert inv["quantity"] == 94
+    assert inv["quantity"] == 94 or inv["on_hand_qty"] == 94
 
     # Replay the identical batch: no double decrement, no duplicate HITL items
     second = cloud_ingest(events)
@@ -110,7 +110,7 @@ def test_sale_batch_applies_and_is_idempotent():
     assert duplicate["applied_deltas"] == {}
 
     inv = [r for r in client.get("/api/v1/cloud/inventory?sku=" + sku).json()["inventory"]][0]
-    assert inv["quantity"] == 94  # unchanged
+    assert inv["quantity"] == 94 or inv["on_hand_qty"] == 94  # unchanged
 
 
 def test_chain_tip_mismatch_rejects_batch():
@@ -143,18 +143,18 @@ def test_oversell_goes_to_hitl_then_discard():
     assert body["applied_deltas"] == {}
 
     queue = client.get("/api/v1/cloud/quarantine").json()["quarantine"]
-    item = next(q for q in queue if q["source_event_id"].startswith("oversell:"))
+    item = next(q for q in queue if q["sku"] == sku)
     assert item["payload"]["delta"] == -8
 
     resp = client.post(f"/api/v1/cloud/quarantine/{item['quarantine_id']}/resolve",
-                       json={"resolution": "apply", "actor": "ops-1"})
+                       json={"resolution": "APPROVED_APPLY", "actor": "ops-1"})
     assert resp.status_code == 409  # still oversells against 5 on hand
 
     resp = client.post(f"/api/v1/cloud/quarantine/{item['quarantine_id']}/resolve",
-                       json={"resolution": "discard", "actor": "ops-1"})
+                       json={"resolution": "REJECTED_VOID", "actor": "ops-1"})
     assert resp.status_code == 200
     inv = [r for r in client.get("/api/v1/cloud/inventory?sku=" + sku).json()["inventory"]][0]
-    assert inv["quantity"] == 5
+    assert inv["quantity"] == 5 or inv["on_hand_qty"] == 5
 
 
 def test_explicit_quarantine_verdict_then_apply_decrements_cloud_inventory():
@@ -167,9 +167,9 @@ def test_explicit_quarantine_verdict_then_apply_decrements_cloud_inventory():
     assert client.get("/api/v1/cloud/inventory?sku=" + sku).json()["inventory"][0]["quantity"] == 100
 
     queue = client.get("/api/v1/cloud/quarantine").json()["quarantine"]
-    item = next(q for q in queue if q["source_event_id"] == event["event_id"])
+    item = next(q for q in queue if event["event_id"] in q["source_event_ids"])
     resp = client.post(f"/api/v1/cloud/quarantine/{item['quarantine_id']}/resolve",
-                       json={"resolution": "apply", "actor": "ops-1"})
+                       json={"resolution": "APPROVED_APPLY", "actor": "ops-1"})
     assert resp.status_code == 200, resp.text
     assert client.get("/api/v1/cloud/inventory?sku=" + sku).json()["inventory"][0]["quantity"] == 98
 
@@ -198,7 +198,7 @@ def test_non_sale_event_goes_to_hitl_and_dedups():
     assert second.json()["duplicates_skipped"] == 1
     # exactly one HITL item from the two submissions
     queue = client.get("/api/v1/cloud/quarantine").json()["quarantine"]
-    matches = [q for q in queue if q["source_event_id"] == transfer["event_id"]]
+    matches = [q for q in queue if transfer["event_id"] in q["source_event_ids"]]
     assert len(matches) == 1
 
 

@@ -48,8 +48,9 @@ Full contracts and examples: `docs/EDGE_ARCHITECTURE.md`.
 
 ## Cloud
 - `POST /api/v1/cloud/policy/bundles/sign` (requires `CLOUD_SIGNER_TOKEN` + `POLICY_SIGNING_KEY`; header `x-cloud-signer-token`)
-- `POST /api/v1/cloud/recovery/sessions` — hash-chain continuity, batch idempotency (dedup ledger), aggregate SALE apply with CAS, quarantine-first HITL routing
-- `GET /api/v1/cloud/watermarks` · `GET /api/v1/cloud/quarantine` · `POST /api/v1/cloud/quarantine/{quarantine_id}/resolve` (`apply|discard`)
+- `POST /api/v1/cloud/recovery/sessions` — event-level ingestion: hash-chain continuity, batch idempotency (dedup ledger), aggregate SALE apply with CAS, quarantine-first HITL routing
+- `POST /api/v1/cloud/edge-sync/watermark-replay` — batch-level fast path for sync-go-classified deltas: locked watermark row, idempotent retry short-circuit, per-event dedup, `COMMUTE_APPLY` with CAS + negative guard, `QUARANTINE` with deterministic `quar_<session>_<sku>` quarantine ids
+- `GET /api/v1/cloud/watermarks` · `GET /api/v1/cloud/quarantine` · `POST /api/v1/cloud/quarantine/{quarantine_id}/resolve` (decision: `APPROVED_APPLY` | `REJECTED_VOID`; legacy `apply`/`discard` accepted)
 - `POST /api/v1/cloud/inventory/seed` · `GET /api/v1/cloud/inventory`
 
 ## Commerce

@@ -50,7 +50,7 @@ class IngestRecoveryRequest(BaseModel):
 
 
 class QuarantineResolveIn(BaseModel):
-    resolution: str = Field(..., pattern="^(apply|discard)$")
+    resolution: str = Field(..., pattern="^(apply|discard|APPROVED_APPLY|REJECTED_VOID)$")
     actor: str = Field(..., min_length=1)
     note: Optional[str] = None
 
@@ -141,9 +141,9 @@ def list_quarantine(status: str = "pending", limit: int = 50, db: Session = Depe
 
     query = db.query(CloudReconciliationQuarantine)
     if status == "pending":
-        query = query.filter(CloudReconciliationQuarantine.resolved_at.is_(None))
+        query = query.filter(CloudReconciliationQuarantine.status == "PENDING_REVIEW")
     elif status == "resolved":
-        query = query.filter(CloudReconciliationQuarantine.resolved_at.isnot(None))
+        query = query.filter(CloudReconciliationQuarantine.status != "PENDING_REVIEW")
     rows = query.order_by(CloudReconciliationQuarantine.id.desc()).limit(min(limit, 500)).all()
     return {"quarantine": [reconcile.quarantine_to_dict(r) for r in rows]}
 
@@ -161,32 +161,32 @@ def resolve_quarantine(quarantine_id: str, payload: QuarantineResolveIn, db: Ses
 @router.post("/inventory/seed", status_code=201)
 def seed_cloud_inventory(payload: CloudInventoryIn, db: Session = Depends(get_db)):
     """Seed the cloud-side inventory projection (initial load / onboarding)."""
-    from app.cloud.models import CloudInventory
+    from app.cloud.models import CloudStoreInventory
 
     tenant_id = payload.tenant_id or settings.TENANT_ID
     store_id = payload.store_id or settings.STORE_ID
     existing = (
-        db.query(CloudInventory)
-        .filter(CloudInventory.tenant_id == tenant_id, CloudInventory.store_id == store_id, CloudInventory.sku == payload.sku)
+        db.query(CloudStoreInventory)
+        .filter(CloudStoreInventory.tenant_id == tenant_id, CloudStoreInventory.store_id == store_id, CloudStoreInventory.sku == payload.sku)
         .first()
     )
     if existing is not None:
         raise HTTPException(status_code=409, detail=f"Cloud inventory row for {payload.sku} already exists")
-    row = CloudInventory(tenant_id=tenant_id, store_id=store_id, sku=payload.sku, quantity=payload.quantity, version=1)
+    row = CloudStoreInventory(tenant_id=tenant_id, store_id=store_id, sku=payload.sku, on_hand_qty=payload.quantity, version=1)
     db.add(row)
     db.commit()
-    return {"sku": row.sku, "quantity": row.quantity, "tenant_id": tenant_id, "store_id": store_id, "seeded_by": payload.actor}
+    return {"sku": row.sku, "quantity": row.on_hand_qty, "tenant_id": tenant_id, "store_id": store_id, "seeded_by": payload.actor}
 
 
 @router.get("/inventory")
 def list_cloud_inventory(sku: Optional[str] = None, limit: int = 100, db: Session = Depends(get_db)):
-    from app.cloud.models import CloudInventory
+    from app.cloud.models import CloudStoreInventory
 
-    query = db.query(CloudInventory)
+    query = db.query(CloudStoreInventory)
     if sku:
-        query = query.filter(CloudInventory.sku == sku)
-    rows = query.order_by(CloudInventory.sku.asc()).limit(min(limit, 500)).all()
+        query = query.filter(CloudStoreInventory.sku == sku)
+    rows = query.order_by(CloudStoreInventory.sku.asc()).limit(min(limit, 500)).all()
     return {"inventory": [
-        {"tenant_id": r.tenant_id, "store_id": r.store_id, "sku": r.sku, "quantity": r.quantity, "version": r.version}
+        {"tenant_id": r.tenant_id, "store_id": r.store_id, "sku": r.sku, "quantity": r.on_hand_qty, "version": r.version}
         for r in rows
     ]}

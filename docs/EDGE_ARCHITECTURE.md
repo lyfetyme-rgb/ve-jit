@@ -195,6 +195,13 @@ Generate keypairs with `python tools/gen_policy_bundle_key.py` — never commit 
 
 `POST /api/v1/cloud/recovery/sessions` is the cloud end of the edge's `cloud-ack` step. Contract:
 
+The recovery pipeline has **two complementary cloud endpoints**; both share the same watermark and audit-hash-chain:
+
+- `/api/v1/cloud/edge-sync/watermark-replay` — **batch-level fast path.** The Go `vejit-sync` sidecar pre-aggregates deltas (`GET /api/v1/edge/outbox/deltas`) and emits deterministic verdicts; the cloud applies `COMMUTE_APPLY` batches under a locked watermark row with CAS, and files `QUARANTINE` batches into HITL with deterministic `quar_<session>_<sku>` ids. Idempotent retry short-circuits on `(from_seq, to_seq, tip)`.
+- `/api/v1/cloud/recovery/sessions` — **event-level path.** Full manifest validation of each event with the hash-chain check; used for raw event replays and for backfills where Go classification isn't available.
+
+Contract (both endpoints):
+
 1. **Hash-chain continuity** — `tip_i = SHA256(tip_{i-1} + ":" + payload_hash_i)` from the stored per-store watermark tip (`cloud_store_watermarks`). Any gap, reorder, duplicate sequence or forgery rejects the whole batch (409), so watermark and audit chain stay consistent.
 2. **Batch idempotency & dedup** — `(tenant_id, store_id, event_id)` unique (`cloud_ingested_events`); replaying a session never double-decrements cloud inventory.
 3. **Quarantine-first conflict routing** — sync-go (or the built-in SALE-only derivation) classifies what may apply; everything else lands in `cloud_reconciliation_quarantine` (HITL) with a machine reason and the full payload. Oversell vs the cloud baseline, no baseline for the SKU, non-SALE events without a commutative verdict — all quarantine, never silently dropped, never negative projections. `apply` resolutions from named humans use the same compare-and-swap path with a negative guard.
@@ -359,7 +366,8 @@ remaining migration is mechanical and documented in the roadmap below.
 | POST | `/api/v1/edge/recovery/watermark-replay` | step 3 — contract replay + conflict detection |
 | POST | `/api/v1/edge/recovery/cloud-ack` | step 4 — resolve, sync, advance watermark, go ONLINE |
 | POST | `/api/v1/edge/recovery/reconcile` | convenience: run steps 1-4 in order |
-| POST | `/api/v1/cloud/recovery/sessions` | hash-chain continuity, batch idempotency (dedup ledger), aggregate SALE apply with CAS, quarantine-first HITL routing |
+| POST | `/api/v1/cloud/recovery/sessions` | event-level ingestion: hash-chain continuity, batch idempotency (dedup ledger), aggregate SALE apply with CAS, quarantine-first HITL routing |
+| POST | `/api/v1/cloud/edge-sync/watermark-replay` | batch-level replay for sync-go-classified deltas: locked watermark row, idempotent retry short-circuit, per-event dedup, `COMMUTE_APPLY` with CAS + negative guard, `QUARANTINE` with deterministic `quar_<session>_<sku>` ids |
 | GET | `/api/v1/cloud/watermarks` | per-store watermarks + verified audit-chain tips |
 | GET | `/api/v1/cloud/quarantine` | HITL queue (pending by default) |
 | POST | `/api/v1/cloud/quarantine/{quarantine_id}/resolve` | human `apply` (CAS, negative guard) or `discard` |
