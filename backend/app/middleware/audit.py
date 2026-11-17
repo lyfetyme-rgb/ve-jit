@@ -5,6 +5,8 @@ from pathlib import Path
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+from app.pci_guard import redact as pci_redact
+
 
 class AuditLogMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, log_path: str = "audit_logs/audit.log"):
@@ -21,7 +23,9 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             "timestamp": started.isoformat(),
             "method": request.method,
             "path": request.url.path,
-            "query": str(request.url.query),
+            # The audit log must never carry cardholder data — redact PAN-class
+            # material from the query string before writing.
+            "query": pci_redact(str(request.url.query)),
             "client": request.client.host if request.client else None,
             "status_code": response.status_code,
             "duration_ms": round((ended - started).total_seconds() * 1000, 2),

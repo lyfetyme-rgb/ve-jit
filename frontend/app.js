@@ -69,6 +69,21 @@ document.getElementById("planesBtn").addEventListener("click", loadPlanes);
 document.getElementById("edgeBtn").addEventListener("click", loadEdge);
 document.getElementById("recsBtn").addEventListener("click", loadRecommendations);
 document.getElementById("anomaliesBtn").addEventListener("click", loadAnomalies);
+loadPci().catch(console.error);
+
+async function loadPci() {
+  const data = await fetchJson("/api/v1/compliance/pci-scope");
+  const el = document.getElementById("pciOutput");
+  if (!el) return;
+  el.innerHTML = `
+    <div class="pci-badge ok">PCI SCOPE: OUT OF SCOPE</div>
+    <div class="pci-row"><span>Processes</span><b>non-PCI SKU / inventory / lane telemetry only</b></div>
+    <div class="pci-row"><span>Rejects</span><b>any PAN / CVV / track data (HTTP 422, pre-parser)</b></div>
+    <div class="pci-row"><span>Sandbox</span><b>systemd: MemoryMax · NoNewPrivileges · AF_UNIX-only · ProtectSystem=strict</b></div>
+    <div class="pci-row"><span>Audit</span><b>append-only hash-chained events + inventory ledger</b></div>
+    <div class="pci-row"><span>Policy</span><b>Ed25519-signed bundles · SAFE_MODE on invariant failure</b></div>
+    <div class="plane-rule">${data.qsa_note} <a href="docs/PCI_SCOPE.md">Full scope document</a></div>`;
+}
 
 async function loadEdge() {
   const data = await fetchJson("/api/v1/edge/status");

@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from app.cloud import policy_signer, reconcile
 from app.config import settings
 from app.db.database import get_db
+from app.pci_guard import forbid_cardholder_data_body
 
 router = APIRouter(prefix="/api/v1/cloud", tags=["cloud"])
 
@@ -94,7 +95,7 @@ def sign_policy_bundle(
 # --------------------------------------------------- recovery ingestion
 
 @router.post("/recovery/sessions")
-def ingest_recovery_session(payload: IngestRecoveryRequest, db: Session = Depends(get_db)):
+def ingest_recovery_session(payload: IngestRecoveryRequest, db: Session = Depends(get_db), _pci: None = Depends(forbid_cardholder_data_body("cloud.recovery_sessions"))):
     """Ingest a recovery batch from an edge node.
 
     Steps (one transaction): contract validation of every manifest, strict

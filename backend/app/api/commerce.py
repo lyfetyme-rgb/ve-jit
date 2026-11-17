@@ -34,6 +34,7 @@ from app.planes.models import (
     Promotion,
 )
 from app.planes.operations import OperationsError, OptimisticConcurrencyError, cas_update
+from app.pci_guard import forbid_cardholder_data_body
 
 router = APIRouter(prefix="/api/v1/commerce", tags=["commerce"])
 
@@ -178,7 +179,7 @@ def get_loyalty_member(member_number: str, db: Session = Depends(get_db)):
 # ----------------------------------------------------------------- orders
 
 @router.post("/orders", status_code=201)
-def place_order_endpoint(payload: OrderCreate, response: Response, db: Session = Depends(get_db)):
+def place_order_endpoint(payload: OrderCreate, response: Response, db: Session = Depends(get_db), _pci: None = Depends(forbid_cardholder_data_body("commerce.orders"))):
     store_id = payload.store_id or settings.STORE_ID
     order, created = _place(payload, db, store_id)
     if not created:
@@ -266,7 +267,7 @@ def cancel_order(order_ref: str, payload: CancelOrder, db: Session = Depends(get
 # -------------------------------------------------- POS / eCommerce entry
 
 @router.post("/pos/transactions", status_code=201)
-def post_pos_transaction(payload: OrderCreate, response: Response, db: Session = Depends(get_db)):
+def post_pos_transaction(payload: OrderCreate, response: Response, db: Session = Depends(get_db), _pci: None = Depends(forbid_cardholder_data_body("commerce.pos_transactions"))):
     """POS integration entry point.
 
     Stable contract for point-of-sale lanes: POST a basket with register_id
@@ -279,7 +280,7 @@ def post_pos_transaction(payload: OrderCreate, response: Response, db: Session =
 
 
 @router.post("/ecommerce/orders", status_code=201)
-def post_ecommerce_order(payload: OrderCreate, response: Response, db: Session = Depends(get_db)):
+def post_ecommerce_order(payload: OrderCreate, response: Response, db: Session = Depends(get_db), _pci: None = Depends(forbid_cardholder_data_body("commerce.ecommerce_orders"))):
     """eCommerce entry point: same transaction rail as POS, channel='ecommerce'."""
     payload.channel = "ecommerce"
     return _channel_order(payload, response, db)

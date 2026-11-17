@@ -33,6 +33,7 @@ from app.edge.models import (
 )
 from app.edge import policy as policy_engine
 from app.edge.skills import SkillError, list_skills, run_skill
+from app.pci_guard import forbid_cardholder_data_body
 from app.planes.governance import create_recommendation
 
 router = APIRouter(prefix="/api/v1/edge", tags=["edge"])
@@ -226,7 +227,7 @@ def list_devices(db: Session = Depends(get_db)):
 # --------------------------------------------------------------- ingest
 
 @router.post("/ingest", status_code=201)
-def ingest_event(payload: IngestIn, db: Session = Depends(get_db)):
+def ingest_event(payload: IngestIn, db: Session = Depends(get_db), _pci: None = Depends(forbid_cardholder_data_body("edge.ingest"))):
     try:
         adapter = adapter_for(payload.vendor)
     except KeyError as exc:

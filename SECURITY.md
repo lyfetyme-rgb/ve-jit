@@ -2,6 +2,16 @@
 
 Report vulnerabilities privately to: security@vejit.com
 
+## PCI-DSS — out of scope by design
+- VE-JIT ingests non-PCI SKU/inventory/lane telemetry only. Any request carrying
+  cardholder data (PAN, track data, CVV, expiry, card-named fields) is rejected
+  with HTTP 422 before validation (`app/pci_guard.py`); the audit middleware
+  redacts PAN-class material from the on-disk log.
+- POS/CDE segmentation, the systemd sandbox (`vendarix-edge.service`,
+  `vendarix-hw-adapter.service`) and the append-only hash-chained audit trail
+  are the primary compensating controls. Retail IT/security scoping guidance,
+  enforcement map and QSA FAQ: `docs/PCI_SCOPE.md`.
+
 ## Production checklist
 - Replace demo secrets in `.env`
 - Enable TLS at ingress / load balancer
