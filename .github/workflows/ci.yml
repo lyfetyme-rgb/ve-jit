@@ -55,6 +55,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version: "1.22"
+          cache: false
       - name: Vet
         working-directory: services/sync-go
         run: go vet ./...
