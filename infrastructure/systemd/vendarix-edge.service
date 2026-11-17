@@ -1,0 +1,31 @@
+[Unit]
+Description=Vendarix VE-JIT Python Edge Core & Policy Engine
+After=network-online.target vendarix-hw-adapter.service
+Wants=network-online.target vendarix-hw-adapter.service
+PartOf=vendarix-edge.target
+
+[Service]
+Type=simple
+User=vendarix-edge
+Group=vendarix-edge
+WorkingDirectory=/opt/vendarix/edge
+Environment=ENV=production
+Environment=DATABASE_URL=sqlite:////var/lib/vendarix/edge.db
+Environment=POLICY_BUNDLE_MAX_AGE_SECONDS=86400
+Environment=EDGE_SKILLS_ROOT=/opt/vendarix/edge/skills
+EnvironmentFile=-/etc/vendarix/edge.env
+
+# Auto-apply database append-only triggers on startup before serving traffic
+ExecStartPre=/usr/bin/sqlite3 /var/lib/vendarix/edge.db ".read /opt/vendarix/edge/infrastructure/database/append_only.sql"
+ExecStart=/opt/vendarix/venv/bin/uvicorn app.main:app --uds /run/vendarix/edge.sock
+
+Restart=always
+RestartSec=2s
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/vendarix /run/vendarix
+
+[Install]
+WantedBy=vendarix-edge.target

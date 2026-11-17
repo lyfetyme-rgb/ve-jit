@@ -21,6 +21,13 @@ queue management, procurement automation, and supply-chain visibility.
 - Tests, CI workflow, verification and deployment scripts
 - Kubernetes starter manifests
 
+## Releases
+
+Tagged releases (`git tag v0.1.0 && git push origin v0.1.0`) build and publish
+per-arch `.deb` + `.tar.gz` bundles with SHA256 checksums to GitHub Releases.
+See [`docs/RELEASE.md`](docs/RELEASE.md) for the bundle layout, gates and the
+one-command store installer.
+
 ## Three planes (Commerce / Operations / Intelligence)
 
 The platform splits responsibilities across three planes sharing one trusted

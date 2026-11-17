@@ -4,11 +4,12 @@ Documentation=https://github.com/lyfetyme-rgb/ve-jit docs/EDGE_ARCHITECTURE.md
 After=network.target
 StartLimitIntervalSec=30
 StartLimitBurst=5
+PartOf=vendarix-edge.target
 
 [Service]
 Type=simple
-User=vendarix
-Group=vendarix
+User=vendarix-hw
+Group=vendarix-edge
 ExecStart=/usr/local/bin/vendarix-hw-adapter --listen /run/vendarix/hw-adapter.sock --edge-uds /run/vendarix/edge.sock
 Restart=always
 RestartSec=2
@@ -38,4 +39,4 @@ ProtectControlGroups=true
 # RestrictAddressFamilies=AF_UNIX AF_USB
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=vendarix-edge.target

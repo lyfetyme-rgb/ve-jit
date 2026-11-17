@@ -33,13 +33,20 @@ import (
 	"vendarix/sync-go/classify"
 )
 
+var version = "dev" // stamped at build time: -ldflags="-X main.version=x.y.z"
+
 func main() {
+	var showVersion = flag.Bool("version", false, "print build version and exit")
 	var (
 		baselinePath = flag.String("baseline", "", "path to baseline JSON object: {\"SKU\": on_hand, ...}")
 		inputPath    = flag.String("input", "-", "delta snapshot JSONL path, or '-' for stdin")
 		outPath      = flag.String("out", "", "verdict output path (default stdout)")
 	)
 	flag.Parse()
+	if *showVersion {
+		fmt.Println(version)
+		return
+	}
 	if *baselinePath == "" {
 		fatal("--baseline is required")
 	}

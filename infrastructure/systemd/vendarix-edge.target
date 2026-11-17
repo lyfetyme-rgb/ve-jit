@@ -1,0 +1,6 @@
+[Unit]
+Description=Vendarix Edge Target (edge core + hardware adapter + sync sidecar)
+Documentation=https://github.com/lyfetyme-rgb/ve-jit
+
+[Install]
+WantedBy=multi-user.target
