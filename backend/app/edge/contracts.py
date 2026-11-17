@@ -61,13 +61,25 @@ REQUIRED_FIELDS = (
     "tenant_id",
     "store_id",
     "source_system",
-    "device_id",
+    "source_device_id",
     "event_id",
     "idempotency_key",
     "event_type",
     "schema_version",
     "source_seq",
     "occurred_at",
+)
+
+# The eight required envelope metadata groups (spec: shared event envelope).
+ENVELOPE_FIELD_GROUPS = (
+    ("tenant_id", "store_id"),                 # (1) tenant and store identity
+    ("source_system", "source_device_id"),     # (2) source system and device identity
+    ("event_id", "idempotency_key"),           # (3) unique event id + idempotent key
+    ("schema_version",),                       # (4) schema version
+    ("source_seq", "occurred_at", "received_at"),  # (5) source sequence and timestamps
+    ("correlation_id", "causation_id"),        # (6) correlation and causation ids
+    ("payload_hash",),                         # (7) payload hash
+    ("auth_metadata",),                        # (8) processing and authorization metadata
 )
 
 
@@ -97,7 +109,7 @@ def build_manifest(
     tenant_id: str,
     store_id: str,
     source_system: str,
-    device_id: str,
+    source_device_id: str,
     payload: dict,
     source_seq: int,
     occurred_at: Optional[datetime] = None,
@@ -105,17 +117,17 @@ def build_manifest(
     idempotency_key: Optional[str] = None,
     correlation_id: Optional[str] = None,
     causation_id: Optional[str] = None,
-    authorization_metadata: Optional[dict] = None,
+    auth_metadata: Optional[dict] = None,
 ) -> dict:
     now = datetime.now(timezone.utc)
     event_id = event_id or new_event_id()
-    key = idempotency_key or f"{source_system}:{device_id}:{event_id}"
+    key = idempotency_key or f"{source_system}:{source_device_id}:{event_id}"
     body = dict(payload)
     return {
         "tenant_id": tenant_id,
         "store_id": store_id,
         "source_system": source_system,
-        "device_id": device_id,
+        "source_device_id": source_device_id,
         "event_id": event_id,
         "idempotency_key": key,
         "event_type": event_type,
@@ -127,9 +139,26 @@ def build_manifest(
         "causation_id": causation_id,
         "payload_hash": payload_hash(body),
         "payload": body,
-        "authorization_metadata": authorization_metadata or {},
+        "auth_metadata": auth_metadata or {},
         "processing_metadata": {},
     }
+
+
+def envelope_completeness(manifest: dict) -> dict:
+    """Verify the eight required envelope metadata groups on a manifest.
+
+    causation_id is legitimately null for root events; the field must still
+    be present.
+    """
+    missing = []
+    for group in ENVELOPE_FIELD_GROUPS:
+        if group == ("correlation_id", "causation_id"):
+            if "correlation_id" not in manifest or "causation_id" not in manifest:
+                missing.append("correlation_id/causation_id")
+            continue
+        if not all(manifest.get(field) not in (None, "") for field in group):
+            missing.append("/".join(group))
+    return {"ok": not missing, "missing": missing}
 
 
 def validate_manifest(manifest: Any) -> dict:

@@ -3,16 +3,37 @@ node_modules/
 .next/
 dist/
 build/
+bin/
 __pycache__/
 *.pyc
 .env
 .venv/
+.venv-win/
 data/
 *.log
 .DS_Store
 Thumbs.db
-.venv-win/
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
+test_*.db
+.coverage
+coverage.xml
+htmlcov/
+# Go (when sync-go/replay-go land)
+*.test
+vendor/
+# C++ (when hardware-native lands)
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.exe
+CMakeFiles/
+CMakeCache.txt
+# TypeScript
+*.tsbuildinfo
+

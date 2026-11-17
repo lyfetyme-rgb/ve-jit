@@ -82,6 +82,7 @@ def approve_recommendation(db: Session, uid: str, *, approver: str, note: Option
     if rec.status == "APPROVED":
         return rec
     rec.status = "APPROVED"
+    rec.version = (rec.version or 1) + 1
     rec.approved_by = approver.strip()
     rec.approved_at = datetime.now(timezone.utc)
     if note:
@@ -99,6 +100,7 @@ def reject_recommendation(db: Session, uid: str, *, actor: str, note: Optional[s
     if rec.status == "APPROVED":
         raise RecommendationError(409, "Recommendation already approved; reject before execution is not allowed")
     rec.status = "REJECTED"
+    rec.version = (rec.version or 1) + 1
     rec.note = note
     db.commit()
     db.refresh(rec)
@@ -118,6 +120,7 @@ def require_approvable_for_execution(db: Session, uid: str) -> Recommendation:
 def mark_executed(db: Session, rec: Recommendation, *, actor: str, execution_ref: Optional[str], note: Optional[str] = None) -> Recommendation:
     _require_actor(actor, "actor")
     rec.status = "EXECUTED"
+    rec.version = (rec.version or 1) + 1
     rec.executed_by = actor.strip()
     rec.executed_at = datetime.now(timezone.utc)
     rec.execution_ref = execution_ref

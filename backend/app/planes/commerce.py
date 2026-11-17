@@ -17,7 +17,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.planes.models import CommerceOrder, CommerceOrderLine, LoyaltyMember, ProductPrice, Promotion
-from app.planes.operations import OperationsError, apply_stock_movement
+from app.planes.operations import OperationsError, apply_stock_movement, cas_update
 
 POINTS_PER_CURRENCY_UNIT = 1  # 1 point per whole currency unit paid
 TIER_THRESHOLDS = (("GOLD", 1500), ("SILVER", 500), ("STANDARD", 0))
@@ -125,16 +125,24 @@ def tier_for_points(points: int) -> str:
     return "STANDARD"
 
 
-def accrue_points(member: LoyaltyMember, total: float) -> int:
+def accrue_points(db: Session, member: LoyaltyMember, total: float) -> int:
     earned = int(total * POINTS_PER_CURRENCY_UNIT)
-    member.points += earned
-    member.tier = tier_for_points(member.points)
+    new_points = member.points + earned
+    cas_update(db, LoyaltyMember, member.id, member.version, {
+        "points": new_points,
+        "tier": tier_for_points(new_points),
+    })
+    db.refresh(member)
     return earned
 
 
-def reverse_points(member: LoyaltyMember, points: int) -> None:
-    member.points = max(0, member.points - int(points))
-    member.tier = tier_for_points(member.points)
+def reverse_points(db: Session, member: LoyaltyMember, points: int) -> None:
+    new_points = max(0, member.points - int(points))
+    cas_update(db, LoyaltyMember, member.id, member.version, {
+        "points": new_points,
+        "tier": tier_for_points(new_points),
+    })
+    db.refresh(member)
 
 
 def apply_sale_movements(db: Session, *, lines: list[dict], store_id: str, order_ref: str, actor: str) -> None:
@@ -242,7 +250,7 @@ def place_order(
         )
 
     if member is not None:
-        order.points_earned = accrue_points(member, total)
+        order.points_earned = accrue_points(db, member, total)
 
     db.commit()
     db.refresh(order)

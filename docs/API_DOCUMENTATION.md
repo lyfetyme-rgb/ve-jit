@@ -33,7 +33,8 @@ Planes: `docs/THREE_PLANES.md`. Edge: `docs/EDGE_ARCHITECTURE.md`.
 Full contracts and examples: `docs/EDGE_ARCHITECTURE.md`.
 - `GET /api/v1/edge/status` — continuity state + value + outbox depth + approved skills
 - `GET /api/v1/edge/continuity/score` · `POST /api/v1/edge/continuity/transition`
-- `GET /api/v1/edge/recovery/status` · `POST /api/v1/edge/recovery/verify` · `POST /api/v1/edge/recovery/reconcile`
+- `GET /api/v1/edge/recovery/status` · `POST /api/v1/edge/recovery/connectivity-check` · `POST /api/v1/edge/recovery/hash-verification`
+- `POST /api/v1/edge/recovery/watermark-replay` · `POST /api/v1/edge/recovery/cloud-ack` · `POST /api/v1/edge/recovery/reconcile` (ordered steps; ONLINE only after a completed session)
 - `POST /api/v1/edge/devices/heartbeat` · `GET /api/v1/edge/devices`
 - `POST /api/v1/edge/ingest` — adapter → manifest → fabric → outbox
 - `GET /api/v1/edge/events` · `GET /api/v1/edge/events/{event_id}` · `POST /api/v1/edge/events/{event_id}/reconcile`

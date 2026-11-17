@@ -54,6 +54,7 @@ class LoyaltyMember(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     member_number = Column(String(64), unique=True, index=True, nullable=False)
+    version = Column(Integer, nullable=False, server_default="1", default=1)
     name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=True)
     points = Column(Integer, nullable=False, default=0)
@@ -66,6 +67,7 @@ class CommerceOrder(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     order_ref = Column(String(64), unique=True, index=True, nullable=False)
+    version = Column(Integer, nullable=False, server_default="1", default=1)
     client_order_id = Column(String(128), unique=True, nullable=True)  # idempotency key
     channel = Column(String(32), nullable=False, default="pos")  # pos|ecommerce|mobile|kiosk
     store_id = Column(String(100), nullable=False, index=True)
@@ -130,6 +132,7 @@ class PurchaseOrder(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     po_number = Column(String(64), unique=True, index=True, nullable=False)
+    version = Column(Integer, nullable=False, server_default="1", default=1)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), index=True, nullable=False)
     store_id = Column(String(100), nullable=False)
     status = Column(String(32), nullable=False, default="DRAFT", index=True)  # DRAFT|APPROVED|PARTIALLY_RECEIVED|RECEIVED|CANCELLED
@@ -158,6 +161,7 @@ class TransferOrder(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     transfer_ref = Column(String(64), unique=True, index=True, nullable=False)
+    version = Column(Integer, nullable=False, server_default="1", default=1)
     from_store = Column(String(100), nullable=False)
     to_store = Column(String(100), nullable=False)
     sku = Column(String(100), index=True, nullable=False)
@@ -212,6 +216,7 @@ class Recommendation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     uid = Column(String(64), unique=True, index=True, nullable=False)
+    version = Column(Integer, nullable=False, server_default="1", default=1)
     plane = Column(String(32), nullable=False, default="intelligence")
     kind = Column(String(64), index=True, nullable=False)  # REPLENISHMENT|TRANSFER|WASTE_REVIEW|WORKFORCE_GUIDANCE|...
     subject_type = Column(String(64), nullable=False)  # sku | supplier | store | order

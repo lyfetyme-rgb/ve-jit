@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     STORE_TIMEZONE: str = "America/New_York"
     TENANT_ID: str = "tenant_001"
 
+    # Policy bundle freshness: newest active rule older than this => hard-safety gate closed. 0 disables.
+    POLICY_BUNDLE_MAX_AGE_SECONDS: int = 86400
+
     # Edge -> cloud synchronization. Empty means dry-run (outbox drains report, send nothing).
     CLOUD_SYNC_URL: str = ""
 

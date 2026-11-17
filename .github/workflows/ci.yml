@@ -31,3 +31,19 @@ jobs:
       - name: Run skill contract tests
         working-directory: ${{ github.workspace }}
         run: python -m pytest skills -q
+      - name: Validate skill schemas and database isolation
+        working-directory: ${{ github.workspace }}
+        run: python tools/validate_skills.py
+
+  typescript:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Type-check edge skill orchestration (run.ts)
+        run: npx tsc --noEmit

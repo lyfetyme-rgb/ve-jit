@@ -1,0 +1,14 @@
+{
+  "name": "ve-jit",
+  "version": "4.1.0",
+  "private": true,
+  "description": "VE-JIT — three planes and the Vendarix edge runtime",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

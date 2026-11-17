@@ -23,7 +23,7 @@ from app.config import settings
 from app.db.database import get_db
 from app.edge import continuity, recovery
 from app.edge.adapters import AdapterContext, adapter_for
-from app.edge.contracts import EVENT_TYPES
+from app.edge.contracts import EVENT_TYPES, envelope_completeness
 from app.edge.fabric import event_to_dict, ingest
 from app.edge.models import (
     AdapterHeartbeat,
@@ -65,11 +65,6 @@ class TransitionIn(BaseModel):
     to_state: str = Field(..., min_length=1)
     actor: str = Field(..., min_length=1)
     reason: str = Field(..., min_length=1)
-
-
-class ReconcileIn(BaseModel):
-    actor: str = Field(..., min_length=1)
-    resolution: str = Field(..., pattern="^(quarantine|accept_local)$")
 
 
 class PolicyRuleIn(BaseModel):
@@ -133,31 +128,65 @@ def recovery_status(db: Session = Depends(get_db)):
     return recovery.recovery_status(db)
 
 
-@router.post("/recovery/verify")
-def recovery_verify(db: Session = Depends(get_db)):
-    """Verification only — does not change state. Used during recovery and for audits."""
-    return {"verification": recovery.verify_outbox(db), "conflicts": recovery.detect_conflicts(db)}
+class RecoveryStepIn(BaseModel):
+    actor: str = Field(..., min_length=1)
+
+
+class CloudAckIn(BaseModel):
+    actor: str = Field(..., min_length=1)
+    resolution: str = Field(..., pattern="^(quarantine|accept_local)$")
+    ack_mode: str = Field(..., pattern="^(cloud|local_override)$")
+
+
+@router.post("/recovery/connectivity-check")
+def connectivity_check(payload: RecoveryStepIn, db: Session = Depends(get_db)):
+    """Step 1 of the gated recovery sequence."""
+    try:
+        return recovery.connectivity_check(db, actor=payload.actor)
+    except recovery.RecoveryError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
+@router.post("/recovery/hash-verification")
+def hash_verification(payload: RecoveryStepIn, db: Session = Depends(get_db)):
+    """Step 2 of the gated recovery sequence: recompute payload hashes of every pending event."""
+    try:
+        return recovery.hash_verification(db, actor=payload.actor)
+    except recovery.RecoveryError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
+@router.post("/recovery/watermark-replay")
+def watermark_replay(payload: RecoveryStepIn, db: Session = Depends(get_db)):
+    """Step 3 of the gated recovery sequence: contract replay + conflict detection."""
+    try:
+        return recovery.watermark_replay(db, actor=payload.actor)
+    except recovery.RecoveryError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
+@router.post("/recovery/cloud-ack")
+def cloud_ack(payload: CloudAckIn, db: Session = Depends(get_db)):
+    """Step 4 of the gated recovery sequence: resolve conflicts, sync, advance the watermark, go ONLINE."""
+    try:
+        return recovery.cloud_ack(db, actor=payload.actor, resolution=payload.resolution, ack_mode=payload.ack_mode)
+    except recovery.RecoveryError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
+class ReconcileIn(BaseModel):
+    actor: str = Field(..., min_length=1)
+    resolution: str = Field(..., pattern="^(quarantine|accept_local)$")
+    ack_mode: str = Field("local_override", pattern="^(cloud|local_override)$")
 
 
 @router.post("/recovery/reconcile")
 def recovery_reconcile(payload: ReconcileIn, db: Session = Depends(get_db)):
-    """The explicit recovery step: verify -> replay -> resolve -> cloud ack -> ONLINE."""
-    state = continuity.current_state(db)
-    if state != continuity.STATE_RECOVERING:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Reconciliation runs only from RECOVERING (current: {state}). Transition to RECOVERING first.",
-        )
-    verification = recovery.verify_outbox(db)
-    if not verification["ok"]:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Event verification failed: {len(verification['hash_mismatches'])} hash mismatch(es), "
-            f"{len(verification['contract_failures'])} contract failure(s). "
-            "Recovery stops in RECOVERING; events must be repaired or quarantined before ONLINE.",
-        )
+    """Convenience: run the full gated sequence in order (connectivity_check ->
+    hash_verification -> watermark_replay -> cloud_ack). Steps are still enforced
+    individually; this endpoint just saves four calls."""
     try:
-        return recovery.reconcile(db, actor=payload.actor, resolution=payload.resolution)
+        return recovery.reconcile(db, actor=payload.actor, resolution=payload.resolution, ack_mode=payload.ack_mode)
     except recovery.RecoveryError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
 
@@ -288,7 +317,7 @@ def reconcile_event(event_id: str, payload: ReconcileEventIn, db: Session = Depe
         subject_type="sku",
         subject_id=sku,
         summary=f"Inventory variance for {sku}: counted {counted} vs projected {expected} ({variance:+d})",
-        rationale=f"observed via {event.source_system}/{event.device_id} seq {event.source_seq} (event {event.event_id})",
+        rationale=f"observed via {event.source_system}/{event.source_device_id} seq {event.source_seq} (event {event.event_id})",
         confidence=0.9,
         recommended_action=json.dumps({"sku": sku, "counted_quantity": int(counted), "expected_quantity": int(expected), "variance": variance}),
         created_by="edge-reconciliation",
@@ -422,8 +451,8 @@ def skills_index():
 @router.post("/skills/{name}/run")
 def skill_run(name: str, payload: SkillRunIn, db: Session = Depends(get_db)):
     try:
-        continuity.require_action_allowed(db, "skill_execute")
-    except continuity.ContinuityError as exc:
+        policy_engine.require_safety_gates(db)
+    except policy_engine.PolicyGateClosed as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     try:
         return run_skill(name, payload.payload)
@@ -452,4 +481,10 @@ def _rule_out(r: PolicyRule) -> dict:
 
 @router.get("/event-types")
 def event_types():
-    return {"schema_version": "vendarix.event.v1", "event_types": list(EVENT_TYPES)}
+    from app.edge.contracts import ENVELOPE_FIELD_GROUPS
+
+    return {
+        "schema_version": "vendarix.event.v1",
+        "event_types": list(EVENT_TYPES),
+        "envelope_field_groups": [list(g) for g in ENVELOPE_FIELD_GROUPS],
+    }

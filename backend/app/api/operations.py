@@ -40,16 +40,25 @@ from app.planes.models import (
 from app.planes.operations import (
     LEDGER_REASONS,
     OperationsError,
+    OptimisticConcurrencyError,
     apply_stock_movement,
+    cas_update,
     ledger_to_dict,
     next_ref,
     record_waste,
 )
 from app.edge.continuity import ContinuityError, require_action_allowed
+from app.edge.policy import PolicyGateClosed, require_safety_gates
 
 
 def _safe_mode_guard(db: Session, action_class: str) -> None:
-    """Hard safety gate: SAFE_MODE blocks unsafe action classes regardless of score."""
+    """Two-step guardrail: hard boolean invariants first (SAFE_MODE state,
+    policy bundle freshness, credential validity), then the action-class gate.
+    """
+    try:
+        require_safety_gates(db)
+    except PolicyGateClosed as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     try:
         require_action_allowed(db, action_class)
     except ContinuityError as exc:
@@ -291,11 +300,19 @@ def approve_purchase_order(po_number: str, payload: ApprovePurchaseOrder, db: Se
         raise HTTPException(status_code=409, detail=f"Only DRAFT purchase orders can be approved; {po_number} is {po.status}")
     if payload.approver.strip() == po.created_by.strip():
         raise HTTPException(status_code=403, detail="Segregation of duties: the approver must not be the creator")
-    po.status = "APPROVED"
-    po.approved_by = payload.approver.strip()
-    po.approved_at = datetime.now(timezone.utc)
+    notes = po.notes + "\n" if po.notes else ""
     if payload.note:
-        po.notes = (po.notes + "\n" if po.notes else "") + f"approval: {payload.note}"
+        notes += f"approval: {payload.note}"
+    try:
+        cas_update(db, PurchaseOrder, po.id, po.version, {
+            "status": "APPROVED",
+            "approved_by": payload.approver.strip(),
+            "approved_at": datetime.now(timezone.utc),
+            "notes": notes,
+        })
+    except OptimisticConcurrencyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     db.commit()
     db.refresh(po)
     return _po_detail(db, po)
@@ -306,9 +323,14 @@ def cancel_purchase_order(po_number: str, payload: CancelPurchaseOrder, db: Sess
     po = _find_po(db, po_number)
     if po.status in ("RECEIVED", "CANCELLED"):
         raise HTTPException(status_code=409, detail=f"{po_number} is {po.status} and cannot be cancelled")
-    po.status = "CANCELLED"
-    po.notes = (po.notes + "\n" if po.notes else "") + f"cancelled by {payload.actor}: {payload.reason}"
+    notes = (po.notes + "\n" if po.notes else "") + f"cancelled by {payload.actor}: {payload.reason}"
+    try:
+        cas_update(db, PurchaseOrder, po.id, po.version, {"status": "CANCELLED", "notes": notes})
+    except OptimisticConcurrencyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     db.commit()
+    db.refresh(po)
     return _po_detail(db, po)
 
 
@@ -356,9 +378,16 @@ def receive_against_po(payload: ReceivingIn, db: Session = Depends(get_db)):
 
     all_lines = list(lines.values())
     fully_received = all(l.quantity_received >= l.quantity_ordered for l in all_lines)
-    po.status = "RECEIVED" if fully_received else "PARTIALLY_RECEIVED"
-    if fully_received:
-        po.received_at = datetime.now(timezone.utc)
+    received_at = datetime.now(timezone.utc) if fully_received else None
+    new_status = "RECEIVED" if fully_received else "PARTIALLY_RECEIVED"
+    try:
+        cas_update(db, PurchaseOrder, po.id, po.version, {
+            "status": new_status,
+            **({"received_at": received_at} if received_at else {}),
+        })
+    except OptimisticConcurrencyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     db.commit()
     db.refresh(po)
     result = _po_detail(db, po)
@@ -420,10 +449,17 @@ def ship_transfer(transfer_ref: str, payload: TransferAction, db: Session = Depe
     except OperationsError as exc:
         db.rollback()
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
-    transfer.status = "SHIPPED"
-    transfer.shipped_by = payload.actor
-    transfer.shipped_at = datetime.now(timezone.utc)
+    try:
+        cas_update(db, TransferOrder, transfer.id, transfer.version, {
+            "status": "SHIPPED",
+            "shipped_by": payload.actor,
+            "shipped_at": datetime.now(timezone.utc),
+        })
+    except OptimisticConcurrencyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     db.commit()
+    db.refresh(transfer)
     return _transfer_out(transfer)
 
 
@@ -446,10 +482,17 @@ def receive_transfer(transfer_ref: str, payload: TransferAction, db: Session = D
     except OperationsError as exc:
         db.rollback()
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
-    transfer.status = "RECEIVED"
-    transfer.received_by = payload.actor
-    transfer.received_at = datetime.now(timezone.utc)
+    try:
+        cas_update(db, TransferOrder, transfer.id, transfer.version, {
+            "status": "RECEIVED",
+            "received_by": payload.actor,
+            "received_at": datetime.now(timezone.utc),
+        })
+    except OptimisticConcurrencyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     db.commit()
+    db.refresh(transfer)
     return _transfer_out(transfer)
 
 

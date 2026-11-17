@@ -24,6 +24,7 @@ from app.edge.models import (
     EDGE_STATES,
     EdgeOutbox,
     PolicyRule,
+    RecoverySession,
 )
 
 STATE_ONLINE = "ONLINE"
@@ -32,10 +33,12 @@ STATE_OFFLINE = "OFFLINE"
 STATE_SAFE_MODE = "SAFE_MODE"
 STATE_RECOVERING = "RECOVERING"
 
-# Hard transition table. "*" means "from any state" (SAFE_MODE is independent).
+# Hard transition table. SAFE_MODE is reachable from every state. ONLINE is
+# only reachable via RECOVERING — never a direct jump — and only when the
+# latest recovery session has COMPLETED the four ordered steps.
 ALLOWED_TRANSITIONS = {
     STATE_ONLINE: {STATE_DEGRADED, STATE_OFFLINE, STATE_SAFE_MODE},
-    STATE_DEGRADED: {STATE_ONLINE, STATE_OFFLINE, STATE_SAFE_MODE},
+    STATE_DEGRADED: {STATE_OFFLINE, STATE_SAFE_MODE, STATE_RECOVERING},
     STATE_OFFLINE: {STATE_RECOVERING, STATE_SAFE_MODE, STATE_DEGRADED},
     STATE_SAFE_MODE: {STATE_RECOVERING},
     STATE_RECOVERING: {STATE_ONLINE, STATE_SAFE_MODE},
@@ -89,8 +92,19 @@ def transition(db: Session, *, to_state: str, actor: str, reason: str) -> dict:
             f"Illegal transition {from_state} -> {to_state}. "
             f"Allowed from {from_state}: {sorted(allowed)}. "
             + ("Recovery is an explicit transition: use RECOVERING and the recovery flow, never a jump to ONLINE."
-               if to_state == STATE_ONLINE and from_state in (STATE_OFFLINE, STATE_SAFE_MODE) else ""),
+               if to_state == STATE_ONLINE and from_state != STATE_ONLINE else ""),
         )
+    if to_state == STATE_ONLINE and from_state != STATE_ONLINE:
+        # Hard gate: ONLINE requires the *latest* recovery session to be COMPLETED
+        # (connectivity_check -> hash_verification -> watermark_replay -> cloud_ack).
+        # A stale or failed recovery unlocks nothing.
+        latest = db.query(RecoverySession).order_by(RecoverySession.id.desc()).first()
+        if latest is None or latest.outcome != "COMPLETED":
+            raise ContinuityError(
+                409,
+                "ONLINE is gated: the latest recovery session must have COMPLETED "
+                "(connectivity_check -> hash_verification -> watermark_replay -> cloud_ack).",
+            )
     db.add(ContinuityRecord(from_state=from_state, to_state=to_state, reason=reason.strip(), actor=actor.strip()))
     db.commit()
     return {"from_state": from_state, "to_state": to_state, "changed": True, "actor": actor.strip(), "reason": reason.strip()}

@@ -14,6 +14,9 @@ from app.config import settings
 from app.db.database import Base, engine
 from app.planes import models as plane_models  # noqa: F401  (register plane tables with create_all)
 from app.edge import models as edge_models  # noqa: F401  (register edge tables with create_all)
+from app.edge.integrity import register as register_append_only
+
+register_append_only()  # event store and audit ledger are INSERT-only
 from app.api.health import router as health_router
 from app.api.inventory import router as inventory_router
 from app.api.queue import router as queue_router
@@ -62,6 +65,9 @@ class DemoQueueDataProvider(QueueDataProvider):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+
+    from app.db.database import ensure_version_columns
+    ensure_version_columns()
 
     # Deterministic edge policies must exist before any event is evaluated.
     from app.db.database import SessionLocal

@@ -52,7 +52,7 @@ def ingest(
             tenant_id=str(manifest.get("tenant_id", "unknown"))[:64] or "unknown",
             store_id=str(manifest.get("store_id", "unknown"))[:64] or "unknown",
             source_system=str(manifest.get("source_system", raw_source))[:64] or raw_source,
-            device_id=str(manifest.get("device_id", "unknown"))[:128] or "unknown",
+            source_device_id=str(manifest.get("source_device_id", "unknown"))[:128] or "unknown",
             event_type=str(manifest.get("event_type", "unknown"))[:64] or "unknown",
             schema_version=str(manifest.get("schema_version", "unknown"))[:32] or "unknown",
             source_seq=int(manifest.get("source_seq") or 0),
@@ -74,14 +74,14 @@ def ingest(
     route = route_for(manifest["event_type"])
 
     # -- IDENTITY CHECK ------------------------------------------------------
-    device_id = manifest["device_id"]
-    heartbeat = db.query(AdapterHeartbeat).filter(AdapterHeartbeat.device_id == device_id).first()
-    identity_ok = bool(manifest.get("tenant_id") and manifest.get("store_id") and device_id)
+    source_device_id = manifest["source_device_id"]
+    heartbeat = db.query(AdapterHeartbeat).filter(AdapterHeartbeat.device_id == source_device_id).first()
+    identity_ok = bool(manifest.get("tenant_id") and manifest.get("store_id") and source_device_id)
     identity_notes = []
     if not identity_ok:
         identity_notes.append("tenant/store/device identity incomplete")
     if heartbeat is not None and not heartbeat.healthy:
-        identity_notes.append(f"device {device_id} reported unhealthy")
+        identity_notes.append(f"device {source_device_id} reported unhealthy")
 
     # -- IDEMPOTENCY (unique constraints are the hard guard; this is the soft path) --
     existing = db.query(EdgeEvent).filter(EdgeEvent.idempotency_key == manifest["idempotency_key"]).first()
@@ -92,7 +92,12 @@ def ingest(
     decision = policy_engine.evaluate_event(db, manifest, action_class="general")
 
     tenant_store_ok = identity_ok and not any("unhealthy" in n for n in identity_notes)
-    if not tenant_store_ok:
+    if decision["decision"] == "DENY":
+        # Hard safety gate closed (SAFE_MODE / stale policy bundle / no credentials).
+        # The event is recorded; it is never processed and never queued.
+        status = "BLOCKED"
+        authorization_metadata = {"authorization": "DENY", "reason": decision}
+    elif not tenant_store_ok:
         status = "REJECTED"
         authorization_metadata = {"authorization": "DENY", "reason": identity_notes}
     elif decision["requires_approval"]:
@@ -108,7 +113,7 @@ def ingest(
         tenant_id=manifest["tenant_id"],
         store_id=manifest["store_id"],
         source_system=manifest["source_system"],
-        device_id=device_id,
+        source_device_id=source_device_id,
         event_type=manifest["event_type"],
         schema_version=manifest["schema_version"],
         source_seq=manifest["source_seq"],
@@ -121,7 +126,7 @@ def ingest(
         route=route,
         status=status,
         processing_metadata=json.dumps({"identity_notes": identity_notes, "route": route}),
-        authorization_metadata=json.dumps(authorization_metadata),
+        auth_metadata=json.dumps(authorization_metadata),
     )
     db.add(event)
 
@@ -133,7 +138,7 @@ def ingest(
             kind="AUTHORIZATION_REQUEST",
             subject_type="edge_event",
             subject_id=event.event_id,
-            summary=f"Authorization required: {event.event_type} from {event.device_id} ({decision['decision']})",
+            summary=f"Authorization required: {event.event_type} from {event.source_device_id} ({decision['decision']})",
             rationale=json.dumps(decision),
             confidence=1.0,
             recommended_action=json.dumps({"event_id": event.event_id, "action_class": action_class}),
@@ -173,7 +178,7 @@ def event_to_dict(event: EdgeEvent) -> dict:
         "tenant_id": event.tenant_id,
         "store_id": event.store_id,
         "source_system": event.source_system,
-        "device_id": event.device_id,
+        "source_device_id": event.source_device_id,
         "event_type": event.event_type,
         "schema_version": event.schema_version,
         "source_seq": event.source_seq,
@@ -186,7 +191,7 @@ def event_to_dict(event: EdgeEvent) -> dict:
         "route": event.route,
         "status": event.status,
         "processing_metadata": _parse(event.processing_metadata),
-        "authorization_metadata": _parse(event.authorization_metadata),
+        "auth_metadata": _parse(event.auth_metadata),
     }
 
 

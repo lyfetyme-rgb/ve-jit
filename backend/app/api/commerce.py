@@ -33,7 +33,7 @@ from app.planes.models import (
     ProductPrice,
     Promotion,
 )
-from app.planes.operations import OperationsError
+from app.planes.operations import OperationsError, OptimisticConcurrencyError, cas_update
 
 router = APIRouter(prefix="/api/v1/commerce", tags=["commerce"])
 
@@ -247,12 +247,19 @@ def cancel_order(order_ref: str, payload: CancelOrder, db: Session = Depends(get
     if order.member_number and order.points_earned:
         member = db.query(LoyaltyMember).filter(LoyaltyMember.member_number == order.member_number).first()
         if member:
-            reverse_points(member, order.points_earned)
+            reverse_points(db, member, order.points_earned)
 
-    order.status = "CANCELLED"
-    order.cancelled_at = datetime.now(timezone.utc)
-    order.cancel_reason = payload.reason
+    try:
+        cas_update(db, CommerceOrder, order.id, order.version, {
+            "status": "CANCELLED",
+            "cancelled_at": datetime.now(timezone.utc),
+            "cancel_reason": payload.reason,
+        })
+    except OptimisticConcurrencyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     db.commit()
+    db.refresh(order)
     return _order_detail(db, order)
 
 

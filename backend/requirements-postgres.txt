@@ -1,0 +1,4 @@
+# Optional: managed PostgreSQL for the operational projection.
+# The default deployment uses embedded SQLite (DATABASE_URL=sqlite:///./vejit.db).
+# Skills NEVER receive a database driver — keep this file out of skill images.
+psycopg2-binary>=2.9.9,<3.0.0

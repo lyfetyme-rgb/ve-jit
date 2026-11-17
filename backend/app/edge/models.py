@@ -11,7 +11,7 @@ schema as follows:
 | Intelligence database | existing `recommendations`                            |
 | Continuity database   | `edge_continuity_records`, `edge_continuity_scores`,  |
 |                       | `edge_checkpoints`                                    |
-| Audit ledger          | existing `recommendations` lifecycle + `inventory_ledger` + `edge_events.authorization_metadata` |
+| Audit ledger          | existing `recommendations` lifecycle + `inventory_ledger` + `edge_events.auth_metadata` |
 
 The outbox is transactional: an event is committed to the event store and to
 `edge_outbox` in the same database transaction, so publication cannot be lost.
@@ -44,7 +44,7 @@ class EdgeEvent(Base):
     tenant_id = Column(String(64), nullable=False, index=True)
     store_id = Column(String(64), nullable=False, index=True)
     source_system = Column(String(64), nullable=False)
-    device_id = Column(String(128), nullable=False, index=True)
+    source_device_id = Column(String(128), nullable=False, index=True)
     event_type = Column(String(64), index=True, nullable=False)
     schema_version = Column(String(32), nullable=False)
     source_seq = Column(Integer, nullable=False)
@@ -55,9 +55,9 @@ class EdgeEvent(Base):
     payload_hash = Column(String(64), nullable=False)
     payload = Column(Text, nullable=False)  # canonical JSON
     route = Column(String(32), index=True, nullable=True)  # operations | intelligence
-    status = Column(String(32), nullable=False, default="RECEIVED", index=True)  # RECEIVED|VALIDATED|REJECTED|PROCESSED| held statuses below
+    status = Column(String(32), nullable=False, default="RECEIVED", index=True)  # RECEIVED|VALIDATED|REJECTED|BLOCKED|HELD|PROCESSED
     processing_metadata = Column(Text, nullable=True)
-    authorization_metadata = Column(Text, nullable=True)
+    auth_metadata = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -146,3 +146,24 @@ class AdapterHeartbeat(Base):
     healthy = Column(Boolean, nullable=False, default=True)
     detail = Column(Text, nullable=True)
     last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+RECOVERY_STEPS = ("CONNECTIVITY_CHECK", "HASH_VERIFICATION", "WATERMARK_REPLAY", "CLOUD_ACK")
+
+
+class RecoverySession(Base):
+    """One attempt at the gated recovery sequence (continuity database).
+
+    Ordered steps: CONNECTIVITY_CHECK -> HASH_VERIFICATION -> WATERMARK_REPLAY -> CLOUD_ACK.
+    outcome: IN_PROGRESS | COMPLETED | FAILED (a failed step moves the node to SAFE_MODE).
+    """
+
+    __tablename__ = "edge_recovery_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    actor = Column(String(255), nullable=False)
+    state = Column(String(32), nullable=False, default="CONNECTIVITY_CHECK")  # next pending step
+    steps = Column(Text, nullable=False, default="{}")  # JSON {step: {ok, at, detail}}
+    outcome = Column(String(32), nullable=False, default="IN_PROGRESS", index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

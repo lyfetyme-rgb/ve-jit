@@ -37,11 +37,15 @@ curl -X POST http://localhost:8000/api/v1/edge/ingest \
   -d '{"vendor":"ncr-voyix","device_id":"ncr-lane-1","source_seq":1,
        "raw":{"msgType":"TX_COMPLETE","txnId":"T-100","lines":[{"sku":"DAIRY-001","qty":2,"price":3.5}],"total":7.0}}'
 
-# Recovery after connectivity returns is explicit
+# Recovery after connectivity returns is explicit (four ordered steps)
 curl -X POST http://localhost:8000/api/v1/edge/continuity/transition \
   -H 'Content-Type: application/json' -d '{"to_state":"RECOVERING","actor":"ops-1","reason":"back online"}'
-curl -X POST http://localhost:8000/api/v1/edge/recovery/reconcile \
-  -H 'Content-Type: application/json' -d '{"actor":"ops-1","resolution":"accept_local"}'
+for step in connectivity-check hash-verification watermark-replay; do
+  curl -X POST "http://localhost:8000/api/v1/edge/recovery/$step" \
+    -H 'Content-Type: application/json' -d '{"actor":"ops-1"}'
+done
+curl -X POST http://localhost:8000/api/v1/edge/recovery/cloud-ack \
+  -H 'Content-Type: application/json' -d '{"actor":"ops-1","resolution":"accept_local","ack_mode":"local_override"}'
 ```
 
 ```bash

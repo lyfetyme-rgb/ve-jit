@@ -1,0 +1,5 @@
+# Skills production requirements — the Python runtime for AI skills ONLY.
+# Intentionally empty: every approved skill is stdlib-only.
+# The six-domain storage guardrail is enforced by the *absence* of database
+# drivers (no psycopg/sqlite3/ORMs/redis/kafka/etc.). Adding any database
+# connection library here fails CI (tools/validate_skills.py). Do not add any.

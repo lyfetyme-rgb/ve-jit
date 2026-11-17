@@ -35,6 +35,26 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 Base.metadata.create_all(bind=engine)
 
+
+import pytest as _pytest
+
+
+@_pytest.fixture(autouse=True)
+def _isolate_db():
+    """Bind this module's test DB only while its tests run (imports are last-write-wins globally)."""
+    app.dependency_overrides[get_db] = override_get_db
+    from app.edge.policy import seed_default_policies
+
+    seed_db = TestingSessionLocal()
+    try:
+        seed_default_policies(seed_db)
+    finally:
+        seed_db.close()
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
 client = TestClient(app)
 
 

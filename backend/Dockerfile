@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /root/.local /home/vejit/.local
 COPY app/ /app/app/
 COPY .env.example /app/.env.example
+ENV EDGE_SKILLS_ROOT=/app/skills
 
 RUN mkdir -p /app/logs && chown -R vejit:vejit /app
 USER vejit

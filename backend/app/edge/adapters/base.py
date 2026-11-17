@@ -45,7 +45,7 @@ class AdapterContext:
             tenant_id=self.tenant_id,
             store_id=self.store_id,
             source_system=self.source_system,
-            device_id=self.device_id,
+            source_device_id=self.device_id,
             payload=payload,
             source_seq=self.source_seq,
             occurred_at=self.occurred_at or datetime.now(timezone.utc),

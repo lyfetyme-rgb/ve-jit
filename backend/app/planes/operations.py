@@ -37,6 +37,16 @@ class OperationsError(Exception):
         self.detail = detail
 
 
+class OptimisticConcurrencyError(OperationsError):
+    """Compare-and-swap failed: someone else updated the row since it was read."""
+
+    def __init__(self, model: str, row_id: int, expected_version: int):
+        super().__init__(409, f"Optimistic concurrency conflict on {model}#{row_id}: expected version {expected_version}")
+        self.model = model
+        self.row_id = row_id
+        self.expected_version = expected_version
+
+
 class InsufficientStock(OperationsError):
     def __init__(self, sku: str, on_hand: int, requested: int):
         super().__init__(409, f"Insufficient stock for {sku}: on hand {on_hand}, requested {requested}")
@@ -58,6 +68,20 @@ def get_or_create_item(db: Session, sku: str, *, name: Optional[str] = None) -> 
     db.add(item)
     db.flush()
     return item, True
+
+
+def cas_update(db: Session, model, row_id: int, expected_version: int, values: dict):
+    """Compare-and-swap update: WHERE id = :id AND version = :version, bump version."""
+    payload = dict(values)
+    payload["version"] = expected_version + 1
+    updated = (
+        db.query(model)
+        .filter(model.id == row_id, model.version == expected_version)
+        .update(payload, synchronize_session=False)
+    )
+    if updated != 1:
+        raise OptimisticConcurrencyError(model.__name__, row_id, expected_version)
+    return updated
 
 
 def apply_stock_movement(
@@ -84,7 +108,8 @@ def apply_stock_movement(
     if new_quantity < 0:
         raise InsufficientStock(sku, item.quantity, -delta)
 
-    item.quantity = new_quantity
+    cas_update(db, InventoryItem, item.id, item.version, {"quantity": new_quantity})
+    db.refresh(item)
     db.add(
         InventoryLedgerEntry(
             sku=sku,

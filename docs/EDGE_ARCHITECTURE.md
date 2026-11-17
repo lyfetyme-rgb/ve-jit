@@ -82,27 +82,38 @@ HARDWARE / POS / ERP / WMS / SUPPLIERS
         CLOUD SYNCHRONIZATION        /api/v1/edge/outbox/drain
 ```
 
-Every event carries tenant and store identity; source system and device
-identity; a unique event id and idempotency key (unique constraint — replays
-return the original event, `outcome=duplicate`); event type and schema
-version; source sequence and timestamps; correlation and causation ids; a
-payload hash (SHA-256 over canonical JSON); and processing and authorization
-metadata. Validation failures are stored with status `REJECTED` and the
-reasons — never silently dropped.
+Every event carries the **eight required envelope metadata groups** (verified at
+adapter output by `tests/test_guardrails.py::test_every_adapter_generates_complete_envelope`):
+
+1. Tenant and store identity — `tenant_id`, `store_id`
+2. Source system and device identity — `source_system`, `source_device_id`
+3. Unique event id and idempotency key — `event_id`, `idempotency_key` (unique constraint — replays return the original event, `outcome=duplicate`)
+4. Event type and schema version — `event_type`, `schema_version` (`vendarix.event.v1`)
+5. Source sequence and timestamps — `source_seq`, `occurred_at`, `received_at`
+6. Correlation and causation ids — `correlation_id`, `causation_id`
+7. Payload hash — SHA-256 over canonical JSON
+8. Processing and authorization metadata — `processing_metadata`, `auth_metadata`
+
+Validation failures are stored with status `REJECTED` and the reasons — never silently dropped.
+Hard-safety-gate failures are stored with status `BLOCKED`, authorization `DENY`, and are never queued.
 
 ## Database and persistence architecture
 
 Six logical domains (implemented; mapping shown so future migrations know
 exactly what moves):
 
-| Domain | Implementation |
-|---|---|
-| Event store | `edge_events` — immutable observed events (payload + hash) |
-| Operational database | `inventory_items`, `purchase_orders`, `transfer_orders`, … (three planes) |
-| Policy database | `edge_policy_rules` — named, versioned, activated/deactivated rules |
-| Intelligence database | `recommendations` — forecasts, recommendations, model outputs |
-| Continuity database | `edge_continuity_records`, `edge_continuity_scores`, `edge_checkpoints` |
-| Audit ledger | `recommendations` lifecycle + `inventory_ledger` + `edge_events.authorization_metadata` + `audit_logs/audit.log` |
+| Domain | Implementation | Isolation |
+|---|---|---|
+| Event store | `edge_events` — immutable observed events (payload + hash) | **INSERT-only**, enforced in ORM (`app/edge/integrity.py`) and as DB triggers (`infrastructure/database/append_only.sql`) |
+| Operational database | `inventory_items`, `purchase_orders`, `transfer_orders`, … (three planes) | Mutable current projections with a `version` column and compare-and-swap writes |
+| Policy database | `edge_policy_rules` — named, versioned, activated/deactivated rules | See the hard safety gates below — the gate fails closed when no active rule exists or the bundle is stale |
+| Intelligence database | `recommendations` — forecasts, recommendations, model outputs | Recommendations are never operational truth |
+| Continuity database | `edge_continuity_records` (append-only), `edge_continuity_scores`, `edge_checkpoints`, `edge_recovery_sessions` | `edge_continuity_records` is INSERT-only |
+| Audit ledger | `recommendations` lifecycle + `inventory_ledger` + `edge_events.auth_metadata` + `audit_logs/audit.log` | `inventory_ledger` is INSERT-only |
+
+`edge_outbox` is the single deliberate exception to append-only: it is the
+cloud-synchronization cursor (pending → synced / failed / quarantined), not the
+audit trail. The audit trail is `edge_events` + `audit_logs/audit.log`.
 
 Pipeline layers, never collapsed:
 
@@ -114,16 +125,52 @@ AI recommendations are not operational truth. A recommendation cannot mutate
 inventory or authorize a purchase; only Operations (with an approved
 recommendation where required) executes.
 
+## Storage isolation (core architectural guardrail)
+
+**Six-domain separation.** The Event Store and Audit Ledger are physically
+separated from the Operational Database at the application layer today, and
+the invariants are enforced, not just documented:
+
+1. **Append-only / INSERT-only enforcement.** `app/edge/integrity.py` attaches
+   SQLAlchemy `before_update` / `before_delete` hooks to the event store and
+   audit-ledger classes; any ORM attempt to mutate or delete them raises
+   `AppendOnlyViolation`. `infrastructure/database/append_only.sql` ships the
+   equivalent `BEFORE UPDATE / BEFORE DELETE` triggers for PostgreSQL and
+   SQLite so the invariant holds even for non-ORM code paths.
+2. **Optimistic concurrency.** Every mutable operational projection carries a
+   `version` column; writes go through compare-and-swap
+   (`WHERE id = :id AND version = :version` + version bump, see
+   `app/planes/operations.py::cas_update`). Inventory quantity moves, purchase
+   orders, transfers, orders and loyalty point balances are all CAS-guarded;
+   conflicts raise `OptimisticConcurrencyError` → HTTP 409. A startup-time
+   expand step (`ensure_version_columns`) adds the column to pre-guardrail
+   databases idempotently.
+3. **Skills are database-free by construction.** Python skills receive a
+   serialized payload on stdin and return a validated envelope on stdout. They
+   run with a sanitized environment (no `DATABASE_URL`, `REDIS_URL`, `KAFKA_*`,
+   `CLOUD_*`, or token material), a hard timeout, a 1 MiB stdout cap, strict
+   envelope validation, and no working-directory access to the platform
+   source tree. `skills/requirements.txt` is deliberately empty (stdlib-only);
+   `requirements-postgres.txt` holds the optional managed-lake driver and is
+   **not** part of the default production requirements. `tools/validate_skills.py`
+   fails CI if any banned import appears in a skill or if any dependency is
+   declared in a skill's `pyproject.toml`.
+4. **Recommended physical layout for scale:** separate attached SQLite files
+   per domain (embedded) or PostgreSQL schemas per domain on managed servers,
+   with INSERT-only permissions for the event store and audit ledger. The ORM
+   boundary above is ready for either; the current single-file layout is kept
+   for the demo and local development.
+
 Implementation requirements — status:
 
 | Requirement | Status |
 |---|---|
 | Transactional outbox | ✅ event + outbox row committed in one DB transaction |
 | Unique constraints for idempotency | ✅ `edge_events.idempotency_key` unique |
-| Append-only event history | ✅ `edge_events` rows are never updated in place (status column advances) |
-| Optimistic concurrency | ⚠️ plane ledger uses signed deltas + `quantity >= 0` enforcement; no version columns yet |
+| Append-only event history | ✅ enforced in ORM (`app/edge/integrity.py`) + DB triggers (`infrastructure/database/append_only.sql`) |
+| Optimistic concurrency | ✅ `version` columns + compare-and-swap on inventory items, POs, transfers, orders, loyalty points, recommendations |
 | Store/tenant partitioning | ✅ `store_id` + `tenant_id` on every event and plane table; per-store deployment is the recommended model |
-| Schema evolution | ✅ `schema_version` pinned (`vendarix.event.v1`); migrations via create_all + explicit migrations when a real DDL migration tool is adopted |
+| Schema evolution | ✅ `schema_version` pinned (`vendarix.event.v1`); `ensure_version_columns()` performs idempotent expand migrations for the new `version` columns |
 | Replay checkpoints / watermarks | ✅ `edge_checkpoints` (`watermark_name=outbox`) advanced on cloud ack |
 | Backup, retention, DR | ⚠️ documented in DEPLOYMENT_GUIDE; not automated here |
 
@@ -143,26 +190,56 @@ STATE 3 OFFLINE     local policies, local ledger, durable event queue
 STATE 4 SAFE_MODE   restricted operations; unsafe actions blocked
    |
    +-- RECOVERING (explicit transition only — never automatic)
-         connectivity checks → event verification → replay → conflict resolution → cloud ack
-         → ONLINE   (or back to SAFE_MODE if any check fails)
+         connectivity_check → hash_verification → watermark_replay → cloud_ack
+         → ONLINE   (any step failing moves the node to SAFE_MODE)
 ```
 
-Enforced in `app/edge/continuity.py`:
+Enforced in `app/edge/continuity.py` + `app/edge/recovery.py`:
 
 - SAFE_MODE is reachable from every state.
-- OFFLINE/SAFE_MODE → ONLINE is **illegal**. Recovery is explicit:
-  `transition.to_state=RECOVERING`, then `POST /api/v1/edge/recovery/reconcile`
-  performs verification (hash re-check + contract re-validation of every
-  pending outbox event), conflict resolution (`quarantine` | `accept_local`),
-  and cloud acknowledgement (watermark advances, outbox acks, state → ONLINE).
-- If verification fails, recovery stops in RECOVERING; ONLINE is never granted
-  with unverified events.
+- **ONLINE is reachable only from RECOVERING** — never directly from ONLINE,
+  DEGRADED, OFFLINE or SAFE_MODE — and only with the *latest* recovery session
+  `COMPLETED`. There is no jump, no shortcut, no override.
+- Recovery is a four-step ordered session (`edge_recovery_sessions`):
 
-SAFE_MODE blocks the business-action classes `inventory_move`,
-`receiving_put_away`, `purchase_order`, `transfer_ship`, `transfer_receive`,
-`waste_record`, `price_change`, `promotion_change`, `skill_execute` across
-both the edge API and the operations plane (adjustments, receiving, transfers,
-waste, PO approval, recommendation execution). Observation paths remain open.
+  1. `POST /api/v1/edge/recovery/connectivity-check` — cloud endpoint reachable,
+     or `local_only` mode recorded when `CLOUD_SYNC_URL` is unset (ack must then
+     use `ack_mode=local_override`)
+  2. `POST /api/v1/edge/recovery/hash-verification` — every pending outbox event
+     is re-validated and its payload hash re-verified
+  3. `POST /api/v1/edge/recovery/watermark-replay` — contract replay from the
+     checkpoint; duplicates and sequence gaps are reported for the ack step
+  4. `POST /api/v1/edge/recovery/cloud-ack` — conflicts resolved
+     (`quarantine` | `accept_local`), pending events acknowledged, watermark
+     advances, session `COMPLETED`, transition → ONLINE
+- Steps are enforced in order; calling them out of order returns 409. Any step
+  failing moves the node to SAFE_MODE. `POST /recovery/reconcile` runs the same
+  four steps in order for operators who want one command.
+- Without a completed session the state machine refuses the ONLINE transition.
+- `POST /recovery/verify` was removed in favour of the ordered session endpoints.
+
+### Hard safety gates (two-step check)
+
+Policy evaluation is two steps, in order (`app/edge/policy.py::evaluate_event`):
+
+1. **Hard boolean invariants** — (a) not in SAFE_MODE, (b) policy bundle valid
+   and fresh (≥1 active rule and newest rule younger than
+   `POLICY_BUNDLE_MAX_AGE_SECONDS`, default 86400; 0 disables freshness check),
+   (c) credentials valid (edge holds no cloud credentials; when
+   `CLOUD_SYNC_URL` is set, `CLOUD_SYNC_TOKEN` must be present, otherwise the
+   local-only mode is valid). Any failure → decision `DENY` **and the
+   threshold rules are never consulted**. Events are stored `BLOCKED` with
+   `authorization=DENY`; actions are refused with 409.
+2. **Deterministic threshold rules** — only evaluated if every invariant
+   passes; `requires_approval` rules force a human HOLD.
+
+The numeric Continuity Value may be attached to the decision for observability
+but carries **no veto and no permission**. It never authorizes an action.
+
+SAFE_MODE and hard-gate blocks apply across the edge API and the operations
+plane (adjustments, receiving, transfers, waste, PO approval, recommendation
+execution) and to skill execution. Observation paths remain open. Two-step
+gating is identical everywhere: invariants first, then thresholds.
 
 ### Continuity value
 
@@ -252,9 +329,12 @@ remaining migration is mechanical and documented in the roadmap below.
 | GET | `/api/v1/edge/status` | continuity state + value + outbox depth + approved skills |
 | GET | `/api/v1/edge/continuity/score` | computed + persisted value |
 | POST | `/api/v1/edge/continuity/transition` | explicit transition; SAFE_MODE reachable from any state |
-| GET | `/api/v1/edge/recovery/status` | recovery prerequisites + watermark |
-| POST | `/api/v1/edge/recovery/verify` | hash + contract verification (no state change) |
-| POST | `/api/v1/edge/recovery/reconcile` | explicit recovery; requires RECOVERING |
+| GET | `/api/v1/edge/recovery/status` | recovery prerequisites, watermark and latest session |
+| POST | `/api/v1/edge/recovery/connectivity-check` | step 1 — cloud reachability probe (or `local_only` mode) |
+| POST | `/api/v1/edge/recovery/hash-verification` | step 2 — recompute payload hashes |
+| POST | `/api/v1/edge/recovery/watermark-replay` | step 3 — contract replay + conflict detection |
+| POST | `/api/v1/edge/recovery/cloud-ack` | step 4 — resolve, sync, advance watermark, go ONLINE |
+| POST | `/api/v1/edge/recovery/reconcile` | convenience: run steps 1-4 in order |
 | POST | `/api/v1/edge/devices/heartbeat` | device health (feeds continuity value) |
 | GET | `/api/v1/edge/devices` | device health inventory |
 | POST | `/api/v1/edge/ingest` | hardware/enterprise ingest → adapters → fabric |

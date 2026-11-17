@@ -26,7 +26,15 @@ Report vulnerabilities privately to: security@vejit.com
 
 ## Edge node (Vendarix)
 - The edge holds no cloud credentials. Cloud synchronization is an explicit,
-  configured operation (`CLOUD_SYNC_URL`); without it, outbox drains are dry-run.
+  configured operation (`CLOUD_SYNC_URL` + `CLOUD_SYNC_TOKEN`); without them,
+  outbox drains and cloud ack are dry-run or require an explicit human
+  `ack_mode=local_override`.
+- Two-step policy gate: hard boolean invariants (not SAFE_MODE, fresh policy
+  bundle, valid credentials) are checked before any threshold rule — an
+  invalid bundle denies actions even in ONLINE.
+- Event store and audit ledger are append-only (ORM hooks + DB triggers in
+  `infrastructure/database/append_only.sql`); operational projections use
+  compare-and-swap version columns (409 on conflict).
 - Every event carries tenant/store/device identity, a unique idempotency key
   (unique constraint) and a SHA-256 payload hash — tampering or replay without
   the original key is detectable and replays return the original event.

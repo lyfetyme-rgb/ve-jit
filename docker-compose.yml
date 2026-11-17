@@ -30,6 +30,7 @@ services:
       retries: 3
     volumes:
       - ./frontend:/app/frontend:ro
+      - ./skills:/app/skills:ro
       - vejit_data:/app
 
   queue-worker:

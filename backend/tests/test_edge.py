@@ -36,6 +36,26 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 Base.metadata.create_all(bind=engine)
 
+
+import pytest as _pytest
+
+
+@_pytest.fixture(autouse=True)
+def _isolate_db():
+    """Bind this module's test DB only while its tests run (imports are last-write-wins globally)."""
+    app.dependency_overrides[get_db] = override_get_db
+    from app.edge.policy import seed_default_policies
+
+    seed_db = TestingSessionLocal()
+    try:
+        seed_default_policies(seed_db)
+    finally:
+        seed_db.close()
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
 client = TestClient(app)
 
 
@@ -110,12 +130,14 @@ def test_contract_validation_rejects_bad_manifest():
     assert validate_manifest({"event_type": "pos.transaction.completed"})["ok"] is False
     assert validate_manifest({})["ok"] is False
     good = {
-        "tenant_id": "t", "store_id": "s", "source_system": "x", "device_id": "d",
+        "tenant_id": "t", "store_id": "s", "source_system": "x", "source_device_id": "d",
         "event_id": "e", "idempotency_key": "k", "event_type": "pos.transaction.completed",
         "schema_version": "vendarix.event.v1", "source_seq": 1,
         "occurred_at": "2026-11-17T00:00:00+00:00",
+        "correlation_id": "c", "causation_id": None,
         "payload": {},
         "payload_hash": payload_hash({}),
+        "auth_metadata": {},
     }
     assert validate_manifest(good)["ok"] is True
     bad = dict(good, payload_hash="0" * 64)

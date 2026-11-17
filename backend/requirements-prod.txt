@@ -4,7 +4,9 @@ pydantic>=2.8.0,<3.0.0
 pydantic-settings>=2.1.0,<3.0.0
 sqlalchemy>=2.0.25,<3.0.0
 alembic>=1.13.1,<2.0.0
-psycopg2-binary>=2.9.9,<3.0.0
+# Database drivers are intentionally NOT in production requirements.
+# The platform runtime defaults to embedded SQLite; managed PostgreSQL deployments
+# install the optional extra: pip install -r requirements-postgres.txt
 redis>=5.0.1,<6.0.0
 kafka-python>=2.0.2,<3.0.0
 numpy>=1.24.0,<2.0.0
