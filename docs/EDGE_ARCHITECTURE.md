@@ -109,6 +109,7 @@ exactly what moves):
 | Policy database | `edge_policy_rules` — named, versioned, activated/deactivated rules | See the hard safety gates below — the gate fails closed when no active rule exists or the bundle is stale |
 | Intelligence database | `recommendations` — forecasts, recommendations, model outputs | Recommendations are never operational truth |
 | Continuity database | `edge_continuity_records` (append-only), `edge_continuity_scores`, `edge_checkpoints`, `edge_recovery_sessions` | `edge_continuity_records` is INSERT-only |
+| Cloud reconciliation database | `cloud_store_watermarks`, `cloud_ingested_events`, `cloud_reconciliation_quarantine`, `cloud_inventory` | Dedup ledger enforces idempotency at the DB level; CAS on `cloud_inventory.version` |
 | Audit ledger | `recommendations` lifecycle + `inventory_ledger` + `edge_events.auth_metadata` + `audit_logs/audit.log` | `inventory_ledger` is INSERT-only |
 
 `edge_outbox` is the single deliberate exception to append-only: it is the
@@ -177,6 +178,28 @@ Implementation requirements — status:
 **Decision:** local edge DB and cloud enterprise DB are not one distributed
 ACID database. They synchronize through explicit contracts: the outbox, the
 watermark, and the recovery flow. The edge holds no cloud credentials.
+
+## Ed25519 signed policy bundles & key rotation
+
+Bundles are signed by the cloud (`POST /api/v1/cloud/policy/bundles/sign`, requires `POLICY_SIGNING_KEY` + `CLOUD_SIGNER_TOKEN`) with a JWKS-style `key_id`, a monotonic `policy_version`, `issued_at`/`expires_at`, over the RFC-8785-style canonical JSON envelope. Edge verifies and installs them atomically (`POST /api/v1/edge/policy/bundle/install`): the new version must be strictly greater than the installed one, the signature must verify against the trust ring, and the bundle must be unexpired and within `POLICY_BUNDLE_MAX_AGE_SECONDS`. Once a signed bundle is installed, the hard safety gate prefers it over the local-rule fallback — fail closed on any verification failure.
+
+Rotation is three-stage (never strand an offline store):
+
+1. **Stage 1 — publish staged key:** cloud generates a new Ed25519 pair, edge registers the public key with `role=staged` (`POST /api/v1/edge/policy/keys`). Old bundles remain valid.
+2. **Stage 2 — cut signing over:** cloud re-signs under the new `key_id`; edges install the new bundle (still verified against the ring).
+3. **Stage 3 — retire old key:** retire the previous `key_id` (`POST /api/v1/edge/policy/keys/{kid}/retire`) after `max(expires_at)` of its bundles has passed.
+
+Generate keypairs with `python tools/gen_policy_bundle_key.py` — never commit a seed.
+
+## Cloud-side recovery ingestion & reconciliation
+
+`POST /api/v1/cloud/recovery/sessions` is the cloud end of the edge's `cloud-ack` step. Contract:
+
+1. **Hash-chain continuity** — `tip_i = SHA256(tip_{i-1} + ":" + payload_hash_i)` from the stored per-store watermark tip (`cloud_store_watermarks`). Any gap, reorder, duplicate sequence or forgery rejects the whole batch (409), so watermark and audit chain stay consistent.
+2. **Batch idempotency & dedup** — `(tenant_id, store_id, event_id)` unique (`cloud_ingested_events`); replaying a session never double-decrements cloud inventory.
+3. **Quarantine-first conflict routing** — sync-go (or the built-in SALE-only derivation) classifies what may apply; everything else lands in `cloud_reconciliation_quarantine` (HITL) with a machine reason and the full payload. Oversell vs the cloud baseline, no baseline for the SKU, non-SALE events without a commutative verdict — all quarantine, never silently dropped, never negative projections. `apply` resolutions from named humans use the same compare-and-swap path with a negative guard.
+
+Reference schema with the invariants expressed in-database: `infrastructure/database/cloud_reconciliation.sql` (dedicated `vendarix_cloud` schema for managed Postgres; the pilot shares the embedded file).
 
 ## Continuity engine and state machine
 
@@ -336,6 +359,19 @@ remaining migration is mechanical and documented in the roadmap below.
 | POST | `/api/v1/edge/recovery/watermark-replay` | step 3 — contract replay + conflict detection |
 | POST | `/api/v1/edge/recovery/cloud-ack` | step 4 — resolve, sync, advance watermark, go ONLINE |
 | POST | `/api/v1/edge/recovery/reconcile` | convenience: run steps 1-4 in order |
+| POST | `/api/v1/cloud/recovery/sessions` | hash-chain continuity, batch idempotency (dedup ledger), aggregate SALE apply with CAS, quarantine-first HITL routing |
+| GET | `/api/v1/cloud/watermarks` | per-store watermarks + verified audit-chain tips |
+| GET | `/api/v1/cloud/quarantine` | HITL queue (pending by default) |
+| POST | `/api/v1/cloud/quarantine/{quarantine_id}/resolve` | human `apply` (CAS, negative guard) or `discard` |
+| POST | `/api/v1/cloud/inventory/seed` | seed cloud-side inventory projection (onboarding) |
+| GET | `/api/v1/cloud/inventory` | cloud inventory projection |
+| POST | `/api/v1/cloud/policy/bundles/sign` | Ed25519 signer (requires `POLICY_SIGNING_KEY` + `CLOUD_SIGNER_TOKEN`; header `x-cloud-signer-token`) |
+| GET | `/api/v1/edge/policy/keys` | trust ring listing (staged/active/retired) |
+| POST | `/api/v1/edge/policy/keys` | register a key: `{kid, public_key_b64, role: staged|active, actor}` |
+| POST | `/api/v1/edge/policy/keys/{kid}/activate` | promote staged → active (rotation stage 2) |
+| POST | `/api/v1/edge/policy/keys/{kid}/retire` | retire a key (rotation stage 3) |
+| GET | `/api/v1/edge/policy/bundle` | current installed signed bundle |
+| POST | `/api/v1/edge/policy/bundle/install` | verify + atomically install (strictly-increasing `policy_version`; flips the hard gate) |
 | POST | `/api/v1/edge/devices/heartbeat` | device health (feeds continuity value) |
 | GET | `/api/v1/edge/devices` | device health inventory |
 | POST | `/api/v1/edge/ingest` | hardware/enterprise ingest → adapters → fabric |

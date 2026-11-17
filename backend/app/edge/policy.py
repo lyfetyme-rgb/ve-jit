@@ -74,6 +74,18 @@ def latest_continuity_value(db: Session) -> Optional[float]:
 
 
 def _policy_bundle_valid(db: Session) -> tuple[bool, str]:
+    """Hard safety gate invariant #2.
+
+    Preferred path: a cryptographically verified, unexpired, monotonic signed
+    policy bundle (Ed25519, overlapping trust ring).
+    Fallback path (no signed bundle installed yet): at least one active local
+    rule exists and the newest is fresher than the configured max age.
+    """
+    from app.edge import policy_bundle
+
+    if policy_bundle.current_bundle_row(db) is not None:
+        return policy_bundle.verify_current_bundle(db, max_age_seconds=float(settings.POLICY_BUNDLE_MAX_AGE_SECONDS))
+
     active = db.query(PolicyRule).filter(PolicyRule.active.is_(True)).all()
     if not active:
         return False, "no active policy rules; refusing to evaluate (fail closed)"

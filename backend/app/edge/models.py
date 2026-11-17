@@ -149,6 +149,50 @@ class AdapterHeartbeat(Base):
 
 
 RECOVERY_STEPS = ("CONNECTIVITY_CHECK", "HASH_VERIFICATION", "WATERMARK_REPLAY", "CLOUD_ACK")
+POLICY_KEY_ROLES = ("staged", "active", "retired")
+
+
+class EdgePolicyKey(Base):
+    """Ed25519 trust ring: active + staged (next) public keys for bundle signing.
+
+    Rotation is three-stage: publish staged key in the ring (stage 1), cloud
+    cuts signing over to it (stage 2), retire the old key after the last of its
+    bundles expires (stage 3).
+    """
+
+    __tablename__ = "edge_policy_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+    kid = Column(String(128), unique=True, nullable=False, index=True)
+    public_key_b64 = Column(String(64), nullable=False)  # 32-byte Ed25519 public key, base64url
+    role = Column(String(16), nullable=False, default="staged", index=True)  # staged|active|retired
+    added_by = Column(String(255), nullable=False, default="cloud-bootstrap")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    retired_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class EdgePolicyBundle(Base):
+    """A verified, atomically-installed signed policy bundle (append-only pick list).
+
+    Every install is kept; the newest valid one is authoritative. Ed25519
+    signature is verified at install time; rows here are only persisted after
+    verification passes.
+    """
+
+    __tablename__ = "edge_policy_bundles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    bundle_id = Column(String(128), unique=True, nullable=False, index=True)
+    policy_version = Column(Integer, nullable=False, index=True)
+    key_id = Column(String(128), nullable=False, index=True)
+    tenant_id = Column(String(64), nullable=False)
+    store_id = Column(String(64), nullable=False)
+    issued_at = Column(DateTime(timezone=True), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    signature = Column(Text, nullable=False)
+    bundle = Column(Text, nullable=False)  # canonical JSON of the full signed bundle
+    installed_by = Column(String(255), nullable=False)
+    installed_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class RecoverySession(Base):

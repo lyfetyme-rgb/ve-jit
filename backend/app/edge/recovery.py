@@ -232,12 +232,43 @@ def cloud_ack(db: Session, *, actor: str, resolution: str, ack_mode: str) -> dic
         if not url:
             raise RecoveryError(409, "ack_mode='cloud' requires CLOUD_SYNC_URL to be configured")
         try:
-            probe = httpx.get(url, timeout=5.0)
+            probe = httpx.get(url.split('/api')[0] + '/health', timeout=5.0)
             if probe.status_code >= 500:
                 raise RecoveryError(409, f"Cloud endpoint returned {probe.status_code}; refusing to ack")
         except httpx.HTTPError as exc:
             raise RecoveryError(409, f"Cloud endpoint unreachable ({exc}); refusing to ack")
     # local_override: a named human acknowledges there is no cloud sink to drain to.
+
+    # Real cloud delivery: push the batch to the cloud recovery ingestion API
+    # when a URL is configured. Local_override means nothing is shipped anywhere.
+    ingestion_report = None
+    if ack_mode == "cloud":
+        manifests = _pending_manifests(db)
+        try:
+            resp = httpx.post(
+                url.rstrip("/") + "/api/v1/cloud/recovery/sessions",
+                json={
+                    "recovery_session_id": str(session.id),
+                    "tenant_id": settings.TENANT_ID,
+                    "store_id": settings.STORE_ID,
+                    "events": manifests,
+                    "verdicts": [],
+                    "actor": actor.strip(),
+                },
+                headers={"content-type": "application/json", "x-vejit-actor": actor.strip()},
+                timeout=30.0,
+            )
+        except httpx.HTTPError as exc:
+            _fail_step(db, session, STEP_CLOUD_ACK, f"cloud delivery failed: {exc}")
+            raise RecoveryError(409, f"Cloud delivery failed ({exc}); node moved to SAFE_MODE") from exc
+        if resp.status_code >= 400:
+            detail = f"cloud ingestion returned {resp.status_code}: {resp.text[:500]}"
+            _fail_step(db, session, STEP_CLOUD_ACK, detail)
+            raise RecoveryError(409, detail)
+        try:
+            ingestion_report = resp.json()
+        except ValueError:
+            ingestion_report = {"raw": resp.text[:500]}
 
     conflicts = detect_conflicts(db)
     quarantined = 0
@@ -289,6 +320,7 @@ def cloud_ack(db: Session, *, actor: str, resolution: str, ack_mode: str) -> dic
         "quarantined": quarantined,
         "resolution": resolution,
         "ack_mode": ack_mode,
+        "ingestion": ingestion_report,
         "watermark": {"last_synced_event_id": last_event_id, "last_seq": last_seq},
         "transition": transition,
         "session": session_to_dict(session),
@@ -305,6 +337,37 @@ def reconcile(db: Session, *, actor: str, resolution: str, ack_mode: str = "loca
 
 
 # --------------------------------------------------------------- primitives
+
+def _pending_manifests(db: Session) -> list[dict]:
+    """Rebuild full manifests for all PENDING/FAILED outbox events (for cloud delivery)."""
+    rows = (
+        db.query(EdgeOutbox, EdgeEvent)
+        .join(EdgeEvent, EdgeEvent.event_id == EdgeOutbox.event_id)
+        .filter(EdgeOutbox.status.in_(["PENDING", "FAILED"]))
+        .all()
+    )
+    manifests = []
+    for _, event in rows:
+        manifests.append({
+            "tenant_id": event.tenant_id,
+            "store_id": event.store_id,
+            "source_system": event.source_system,
+            "source_device_id": event.source_device_id,
+            "event_id": event.event_id,
+            "idempotency_key": event.idempotency_key,
+            "event_type": event.event_type,
+            "schema_version": event.schema_version,
+            "source_seq": event.source_seq,
+            "occurred_at": event.occurred_at.isoformat() if event.occurred_at else None,
+            "received_at": event.received_at.isoformat() if event.received_at else None,
+            "correlation_id": event.correlation_id,
+            "causation_id": event.causation_id,
+            "payload_hash": event.payload_hash,
+            "payload": json.loads(event.payload),
+            "auth_metadata": json.loads(event.auth_metadata) if event.auth_metadata else {},
+        })
+    return manifests
+
 
 def verify_outbox(db: Session) -> dict:
     events = (

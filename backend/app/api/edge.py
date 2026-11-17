@@ -516,6 +516,86 @@ def skill_run(name: str, payload: SkillRunIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
 
 
+# --------------------------------------------------------------- policy bundles & keys
+
+class KeyCreate(BaseModel):
+    kid: str = Field(..., min_length=1, max_length=128)
+    public_key_b64: str = Field(..., min_length=1)
+    role: str = Field("staged", pattern="^(staged|active)$")
+    actor: str = Field(..., min_length=1)
+
+
+class KeyAction(BaseModel):
+    actor: str = Field(..., min_length=1)
+
+
+class BundleInstall(BaseModel):
+    bundle: dict[str, Any]
+    actor: str = Field(..., min_length=1)
+
+
+@router.get("/policy/keys")
+def list_policy_keys(db: Session = Depends(get_db)):
+    from app.edge.policy_bundle import list_keys
+
+    return {"keys": list_keys(db)}
+
+
+@router.post("/policy/keys", status_code=201)
+def add_policy_key(payload: KeyCreate, db: Session = Depends(get_db)):
+    from app.edge.policy_bundle import BundleError, add_key
+
+    try:
+        return add_key(db, kid=payload.kid, public_key_b64=payload.public_key_b64, role=payload.role, added_by=payload.actor)
+    except BundleError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
+@router.post("/policy/keys/{kid}/activate")
+def activate_policy_key(kid: str, payload: KeyAction, db: Session = Depends(get_db)):
+    from app.edge.policy_bundle import BundleError, activate_key
+
+    try:
+        return activate_key(db, kid=kid, actor=payload.actor)
+    except BundleError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
+@router.post("/policy/keys/{kid}/retire")
+def retire_policy_key(kid: str, payload: KeyAction, db: Session = Depends(get_db)):
+    from app.edge.policy_bundle import BundleError, retire_key
+
+    try:
+        return retire_key(db, kid=kid, actor=payload.actor)
+    except BundleError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
+@router.get("/policy/bundle")
+def current_policy_bundle(db: Session = Depends(get_db)):
+    from app.edge.policy_bundle import current_bundle
+
+    bundle = current_bundle(db)
+    if bundle is None:
+        raise HTTPException(status_code=404, detail="No signed policy bundle installed (local rule fallback is in effect)")
+    return bundle
+
+
+@router.post("/policy/bundle/install")
+def install_policy_bundle(payload: BundleInstall, db: Session = Depends(get_db)):
+    from app.edge.policy_bundle import BundleError, install_bundle
+
+    try:
+        return install_bundle(
+            db,
+            bundle=payload.bundle,
+            actor=payload.actor,
+            max_age_seconds=settings.POLICY_BUNDLE_MAX_AGE_SECONDS,
+        )
+    except BundleError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+
+
 # --------------------------------------------------------------- helpers
 
 def _rule_out(r: PolicyRule) -> dict:

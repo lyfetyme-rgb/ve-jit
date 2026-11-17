@@ -25,10 +25,15 @@ Report vulnerabilities privately to: security@vejit.com
   `actor`, orders carry register id, recommendations carry approver/executor).
 
 ## Edge node (Vendarix)
-- The edge holds no cloud credentials. Cloud synchronization is an explicit,
-  configured operation (`CLOUD_SYNC_URL` + `CLOUD_SYNC_TOKEN`); without them,
-  outbox drains and cloud ack are dry-run or require an explicit human
-  `ack_mode=local_override`.
+- Edge policy bundles are Ed25519-signed with a trust ring; the edge rejects untrusted `key_id`s,
+  tampered signatures and non-monotonic versions (fail closed). The hard safety gate flips to
+  bundle verification once a signed bundle is installed.
+- Cloud ingestion (`POST /api/v1/cloud/recovery/sessions`) verifies hash-chain continuity against
+  the per-store watermark tip; any gap or forgery rejects the batch (409). Idempotent dedup prevents
+  double-apply of replays.
+- Non-commutative or unverifiable batches route to the HITL quarantine queue with machine reasons;
+  nothing is silently accepted and nothing mutates cloud inventory without a commutative verdict
+  or a named-human `apply`.
 - Two-step policy gate: hard boolean invariants (not SAFE_MODE, fresh policy
   bundle, valid credentials) are checked before any threshold rule — an
   invalid bundle denies actions even in ONLINE.
@@ -47,5 +52,9 @@ Report vulnerabilities privately to: security@vejit.com
   explicit `RECOVERING` transition followed by verify → replay → resolve → ack.
 - AI skills execute as isolated subprocesses with no database handles; only
   skills whose config marks `approved=true` may run.
+- The edge holds no cloud credentials. Cloud synchronization is an explicit,
+  configured operation (`CLOUD_SYNC_URL` + `CLOUD_SYNC_TOKEN`); without them,
+  outbox drains and cloud ack are dry-run or require an explicit human
+  `ack_mode=local_override`.
 - Adapter payloads are untrusted input; unknown payloads are quarantined as
   `edge.unrecognized` with the payload hash preserved, never guessed.

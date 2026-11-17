@@ -43,6 +43,14 @@ Full contracts and examples: `docs/EDGE_ARCHITECTURE.md`.
 - `GET /api/v1/edge/policy/rules` · `POST /api/v1/edge/policy/rules` · `POST /api/v1/edge/policy/seed-defaults`
 - `GET /api/v1/edge/skills` · `POST /api/v1/edge/skills/{name}/run`
 - `GET /api/v1/edge/event-types`
+- `GET /api/v1/edge/policy/keys` · `POST /api/v1/edge/policy/keys` · `POST /api/v1/edge/policy/keys/{kid}/activate` · `POST /api/v1/edge/policy/keys/{kid}/retire`
+- `GET /api/v1/edge/policy/bundle` · `POST /api/v1/edge/policy/bundle/install` (Ed25519 verification + monotonic version enforced; flips the hard safety gate to bundle verification)
+
+## Cloud
+- `POST /api/v1/cloud/policy/bundles/sign` (requires `CLOUD_SIGNER_TOKEN` + `POLICY_SIGNING_KEY`; header `x-cloud-signer-token`)
+- `POST /api/v1/cloud/recovery/sessions` — hash-chain continuity, batch idempotency (dedup ledger), aggregate SALE apply with CAS, quarantine-first HITL routing
+- `GET /api/v1/cloud/watermarks` · `GET /api/v1/cloud/quarantine` · `POST /api/v1/cloud/quarantine/{quarantine_id}/resolve` (`apply|discard`)
+- `POST /api/v1/cloud/inventory/seed` · `GET /api/v1/cloud/inventory`
 
 ## Commerce
 - `POST /api/v1/commerce/prices` · `GET /api/v1/commerce/prices` · `GET /api/v1/commerce/prices/evaluate`

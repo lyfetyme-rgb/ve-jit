@@ -15,6 +15,11 @@ queue management, procurement automation, and supply-chain visibility.
   human authorization requests, a continuity state machine (ONLINE/DEGRADED/OFFLINE/SAFE_MODE) with an honest continuity
   value, transactional outbox + explicit verify→replay→resolve→ack recovery, and approved local AI skills under `skills/`.
   See `docs/EDGE_ARCHITECTURE.md`
+- **Signed policy bundles** — Ed25519-signed, JWKS-style `key_id` + monotonic `policy_version` bundles with a
+  staged→active→retired trust ring (`tools/gen_policy_bundle_key.py`); hard safety gate prefers verified bundles over
+  local rules
+- **Cloud recovery ingestion** — hash-chain continuity vs per-store watermark tip, idempotent dedup ledger,
+  quarantine-first HITL reconciliation (`POST /api/v1/cloud/recovery/sessions`), payload-CAS apply
 - **Edge sidecars** — `services/hardware_adapter/`: C++ UDS daemon (systemd-sandboxed) for SDK-side bridges; `services/sync-go/`: Go replay classifier (commutative sales vs quarantine) for the recovery gate's replay step. Both are stateless; the Python edge is the single owner of local state, policy and audit. See `services/README.md`
 - HTML dashboard UI served by FastAPI (includes a live Three Planes panel)
 - PostgreSQL + Redis + Kafka + Prometheus + Grafana Docker stack

@@ -37,6 +37,10 @@ class Settings(BaseSettings):
 
     # Edge -> cloud synchronization. Empty means dry-run (outbox drains report, send nothing).
     CLOUD_SYNC_URL: str = ""
+    # Cloud signer: disabled until both are set (never ship a default signing key)
+    CLOUD_SIGNER_TOKEN: str = ""
+    POLICY_SIGNING_KEY: str = ""  # 32-byte Ed25519 seed, base64url
+    POLICY_BUNDLE_TTL_SECONDS: int = 86400
 
     QUEUE_TARGET_WAIT_SECONDS: int = 180
     QUEUE_MAX_WAIT_SECONDS: int = 300
