@@ -291,10 +291,10 @@ Approved skills (`skills/`): `demand-forecasting`, `inventory-reconciliation`,
 
 | Language | Responsibility | In this repo |
 |---|---|---|
-| TypeScript | Edge orchestration and execution | `skills/*/run.ts` contract; FastAPI app is the runtime today (see roadmap) |
-| Python | AI skills, ONNX, Whisper, analytical processing | ✅ implemented and enforced |
-| Go | Synchronization, replay, high-throughput services | target — `/api/v1/edge/outbox/drain` semantics implemented in Python |
-| C++ | Native hardware interception and device integration | target — adapters are the integration seam |
+| TypeScript | Edge orchestration and execution | `skills/*/run.ts` contract + `tsc --noEmit` in CI |
+| Python | AI skills, ONNX, Whisper, analytical processing | ✅ implemented and enforced (6 approved skills, stdlib-only, isolated subprocesses) |
+| Go | Synchronization, replay and high-throughput services | ✅ `services/sync-go/` — replay classifier with commutative-delta vs quarantine semantics, unit-tested, CI-built |
+| C++ | Native hardware interception and device integration | ✅ `services/hardware_adapter/` — UDS daemon + systemd sandbox, forwards to the edge UDS, integration-tested in CI |
 
 ## Monorepo target vs this repository
 
@@ -305,7 +305,7 @@ monolith; the edge is implemented as a first-class module inside it
 
 | Target | This repository |
 |---|---|
-| `apps/edge-agent/src/handlers/hardware-watcher.ts` | `app/api/edge.py` (`/ingest`) + `app/edge/adapters/*` |
+| `apps/edge-agent/src/handlers/hardware-watcher.ts` | `services/hardware_adapter/` (C++ UDS daemon) + `app/api/edge.py` (`/ingest`) + `app/edge/adapters/*` |
 | `apps/edge-agent/src/orchestration` | `app/edge/fabric.py` |
 | `apps/edge-agent/src/event-router` | `ROUTES` in `app/edge/contracts.py` |
 | `apps/edge-agent/src/ipc` | subprocess JSON contract (`app/edge/skills.py`) |
@@ -316,7 +316,8 @@ monolith; the edge is implemented as a first-class module inside it
 | `packages/policy-engine` | `app/edge/policy.py` |
 | `packages/audit-sdk` | `app/middleware/audit.py` + recommendation lifecycle |
 | `skills/*` | ✅ `skills/` at repository root — exact target layout |
-| `services/sync-go`, `services/replay-go`, `services/hardware-native/cpp` | not implemented — Python equivalents in `app/edge/` |
+| `services/sync-go`, `services/replay-go` | ✅ `services/sync-go/` — replay classifier (watermark-replay semantics) |
+| `services/hardware-native/cpp` | ✅ `services/hardware_adapter/` — C++ UDS daemon + systemd unit |
 | `infrastructure/monorepo tooling` | standard `backend/` layout retained |
 
 This is a deliberate, honest staging decision, not a silent divergence; the
@@ -342,6 +343,7 @@ remaining migration is mechanical and documented in the roadmap below.
 | GET | `/api/v1/edge/events/{event_id}` | one event with authorization metadata |
 | POST | `/api/v1/edge/events/{event_id}/reconcile` | count vs projection → recommendation (never auto-adjust) |
 | GET | `/api/v1/edge/outbox` | queue depth + oldest pending |
+| GET | `/api/v1/edge/outbox/deltas` | classified replay export for sync-go (SALE deltas derived; rest skipped, never guessed) |
 | POST | `/api/v1/edge/outbox/drain` | honest dry-run unless `CLOUD_SYNC_URL` is set |
 | GET | `/api/v1/edge/checkpoints` | replay watermarks |
 | GET/POST | `/api/v1/edge/policy/rules` | policy database (create requires actor) |
@@ -360,14 +362,30 @@ count-to-cycle-count reconciliation chain (ingest → variance → recommendatio
 continuity components, and the SAFE_MODE hard block with explicit recovery
 back to ONLINE. `skills/*/tests/` contract-test every approved skill.
 
+## Single-owner rule (hard constraint)
+
+**Python + the embedded database own local state, policy evaluation and audit
+logging on the edge node.** The sidecars are stateless:
+
+- `services/hardware_adapter` (C++) — no database, no ORM, no policy code; it
+  forwards newline-delimited JSON from SDK bridges to the edge's UDS listener
+  (`/api/v1/edge/ingest`, `/api/v1/edge/devices/heartbeat`).
+- `services/sync-go` — reads a classified export (`GET /api/v1/edge/outbox/deltas`,
+  `vejit-sync --input -`), returns verdicts; never writes the operational or
+  audit tables. Replay application happens only through the gated four-step
+  recovery (`cloud_ack`) in Python.
+- Neither sidecar holds credentials, connection strings, or write access to
+  `inventory_items`, `edge_events`, `inventory_ledger`, or any audit table.
+
+Violation of this rule is an architectural defect, not an optimization.
+
 ## Roadmap to the target architecture
 
-1. Node edge runtime: `apps/edge-agent` implementing this exact contract (the
-   API surface above is runtime-agnostic by design).
-2. `services/sync-go`: outbox drain with backoff + watermark transactions;
-   `/outbox/drain` semantics are the acceptance tests.
-3. `services/hardware-native/cpp`: device interception behind the same
-   adapter interfaces; adapters here are the reference behavior.
+1. ~~Node edge runtime~~ — consciously deferred: Python remains the edge runtime; the daemon isolates hardware.
+2. ~~`services/sync-go`~~ — ✅ implemented; wire it as a periodic worker once a
+   real cloud sink exists (`CLOUD_SYNC_URL` + mTLS).
+3. ~~`services/hardware-native/cpp`~~ — ✅ implemented as `services/hardware_adapter`;
+   real SDK bindings (NCR/Toshiba/Diebold vendor libraries) drop in behind the
+   same command protocol.
 4. Real banner interface control documents replacing the demo contracts.
-5. `CLOUD_SYNC_URL` + mTLS to the enterprise cloud, with the recovery flow as
-   the reconciliation gate.
+5. mTLS to the enterprise cloud; recovery remains the reconciliation gate.

@@ -15,6 +15,7 @@ queue management, procurement automation, and supply-chain visibility.
   human authorization requests, a continuity state machine (ONLINE/DEGRADED/OFFLINE/SAFE_MODE) with an honest continuity
   value, transactional outbox + explicit verify→replay→resolve→ack recovery, and approved local AI skills under `skills/`.
   See `docs/EDGE_ARCHITECTURE.md`
+- **Edge sidecars** — `services/hardware_adapter/`: C++ UDS daemon (systemd-sandboxed) for SDK-side bridges; `services/sync-go/`: Go replay classifier (commutative sales vs quarantine) for the recovery gate's replay step. Both are stateless; the Python edge is the single owner of local state, policy and audit. See `services/README.md`
 - HTML dashboard UI served by FastAPI (includes a live Three Planes panel)
 - PostgreSQL + Redis + Kafka + Prometheus + Grafana Docker stack
 - Tests, CI workflow, verification and deployment scripts

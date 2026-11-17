@@ -36,4 +36,7 @@ CMakeFiles/
 CMakeCache.txt
 # TypeScript
 *.tsbuildinfo
+# C++ adapter build
+services/hardware_adapter/vendarix-hw-adapter
+*.sock
 

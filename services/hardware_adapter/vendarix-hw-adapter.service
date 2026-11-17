@@ -1,0 +1,41 @@
+[Unit]
+Description=Vendarix hardware adapter (isolated hardware front door)
+Documentation=https://github.com/lyfetyme-rgb/ve-jit docs/EDGE_ARCHITECTURE.md
+After=network.target
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=vendarix
+Group=vendarix
+ExecStart=/usr/local/bin/vendarix-hw-adapter --listen /run/vendarix/hw-adapter.sock --edge-uds /run/vendarix/edge.sock
+Restart=always
+RestartSec=2
+
+# Sandbox: memory-capped, no privileges, no home, scoped filesystem
+MemoryMax=64M
+MemoryHigh=48M
+TasksMax=32
+CPUQuota=50%
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/run/vendarix
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+# Hardware SDK integration will need device nodes; when it lands, scope them
+# explicitly with DeviceAllow= and remove the blanket AF_UNIX-only rule.
+# DeviceAllow=/dev/ttyUSB0 rw
+# RestrictAddressFamilies=AF_UNIX AF_USB
+
+[Install]
+WantedBy=multi-user.target

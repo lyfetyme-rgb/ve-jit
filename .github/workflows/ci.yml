@@ -47,3 +47,41 @@ jobs:
         run: npm ci
       - name: Type-check edge skill orchestration (run.ts)
         run: npx tsc --noEmit
+
+  sync-go:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.22"
+      - name: Vet
+        working-directory: services/sync-go
+        run: go vet ./...
+      - name: Test
+        working-directory: services/sync-go
+        run: go test ./...
+      - name: Build
+        working-directory: services/sync-go
+        run: go build ./cmd/vejit-sync
+
+  hardware-adapter:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install build dependencies and pytest
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends g++ nlohmann-json3-dev
+          python -m pip install --upgrade pip pytest
+      - name: Build the C++ adapter with warnings as errors
+        working-directory: services/hardware_adapter
+        run: g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -o vendarix-hw-adapter hardware_adapter.cpp -pthread
+      - name: Smoke test (--version)
+        working-directory: services/hardware_adapter
+        run: ./vendarix-hw-adapter --version
+      - name: Integration test (UDS round trip)
+        run: python -m pytest services/hardware_adapter/test_integration.py -q -p no:cacheprovider

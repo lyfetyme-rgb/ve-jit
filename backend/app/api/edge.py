@@ -327,6 +327,62 @@ def reconcile_event(event_id: str, payload: ReconcileEventIn, db: Session = Depe
 
 # --------------------------------------------------------------- outbox
 
+@router.get("/outbox/deltas")
+def outbox_deltas(limit: int = Query(500, ge=1, le=5000), db: Session = Depends(get_db)):
+    """Classifiable-replay export for the sync-go sidecar.
+
+    Derives inventory deltas from PENDING/FAILED outbox events. Python owns the
+    semantics (it understands POS receipts, counts, transfers, waste); the Go
+    worker only classifies commutation and never sees raw payloads.
+
+    Output JSONL-compatible list of {event_id, event_type, sku, delta, kind}.
+    Unclassifiable event types are counted and skipped, never guessed.
+    """
+    events = (
+        db.query(EdgeOutbox, EdgeEvent)
+        .join(EdgeEvent, EdgeEvent.event_id == EdgeOutbox.event_id)
+        .filter(EdgeOutbox.status.in_(["PENDING", "FAILED"]))
+        .order_by(EdgeOutbox.id.asc())
+        .limit(limit)
+        .all()
+    )
+    deltas = []
+    skipped = 0
+    for outbox, event in events:
+        if event.event_type != "pos.transaction.completed":
+            skipped += 1
+            continue
+        try:
+            payload = json.loads(event.payload)
+        except ValueError:
+            skipped += 1
+            continue
+        lines = payload.get("lines") if isinstance(payload, dict) else None
+        if not isinstance(lines, list):
+            skipped += 1
+            continue
+        for line in lines:
+            sku = line.get("sku")
+            qty = line.get("quantity")
+            if sku and qty:
+                deltas.append({
+                    "event_id": event.event_id,
+                    "event_type": event.event_type,
+                    "sku": sku,
+                    "delta": -int(qty),
+                    "kind": "SALE",
+                })
+            else:
+                skipped += 1
+    checkpoint = None
+    from app.edge.models import EdgeCheckpoint
+
+    cp = db.query(EdgeCheckpoint).filter(EdgeCheckpoint.watermark_name == "outbox").first()
+    if cp is not None:
+        checkpoint = {"last_synced_event_id": cp.last_synced_event_id, "last_seq": cp.last_seq}
+    return {"deltas": deltas, "count": len(deltas), "skipped_unclassified": skipped, "watermark": checkpoint}
+
+
 @router.get("/outbox")
 def outbox_status(db: Session = Depends(get_db)):
     pending = db.query(EdgeOutbox).filter(EdgeOutbox.status == "PENDING").count()

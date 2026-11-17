@@ -202,6 +202,21 @@ def test_skill_run_shelf_intelligence_and_listing():
     assert body["output"]["bands"]["critical"] + body["output"]["bands"]["at_risk"] + body["output"]["bands"]["stockout"] >= 1
 
 
+def test_outbox_deltas_derive_sale_deltas():
+    device = f"dlt-{sfx()}"
+    heartbeat(device)
+    resp = client.post("/api/v1/edge/ingest", json={
+        "vendor": "ncr-voyix", "device_id": device, "source_seq": 1,
+        "raw": {"msgType": "TX_COMPLETE", "txnId": f"TXN-{sfx()}", "laneId": device,
+                "lines": [{"sku": f"DELTA-{sfx()}", "qty": 2, "price": 1.0}, {"sku": f"DELTA2-{sfx()}", "qty": 1, "price": 2.0}], "total": 4.0},
+    })
+    assert resp.json()["events"][0]["outcome"] == "validated"
+    body = client.get("/api/v1/edge/outbox/deltas").json()
+    sale = [d for d in body["deltas"] if d["kind"] == "SALE"]
+    assert any(d["sku"].startswith("DELTA-") for d in sale)
+    assert all(d["delta"] < 0 for d in sale)
+
+
 def test_outbox_drain_is_honest_dry_run_without_cloud_url():
     resp = client.post("/api/v1/edge/outbox/drain", json={"actor": "ops-1", "max_batch": 5})
     assert resp.status_code == 200

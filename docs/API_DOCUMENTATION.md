@@ -38,7 +38,7 @@ Full contracts and examples: `docs/EDGE_ARCHITECTURE.md`.
 - `POST /api/v1/edge/devices/heartbeat` · `GET /api/v1/edge/devices`
 - `POST /api/v1/edge/ingest` — adapter → manifest → fabric → outbox
 - `GET /api/v1/edge/events` · `GET /api/v1/edge/events/{event_id}` · `POST /api/v1/edge/events/{event_id}/reconcile`
-- `GET /api/v1/edge/outbox` · `POST /api/v1/edge/outbox/drain` (honest dry-run unless `CLOUD_SYNC_URL` is set)
+- `GET /api/v1/edge/outbox` · `GET /api/v1/edge/outbox/deltas` · `POST /api/v1/edge/outbox/drain` (honest dry-run unless `CLOUD_SYNC_URL` is set)
 - `GET /api/v1/edge/checkpoints`
 - `GET /api/v1/edge/policy/rules` · `POST /api/v1/edge/policy/rules` · `POST /api/v1/edge/policy/seed-defaults`
 - `GET /api/v1/edge/skills` · `POST /api/v1/edge/skills/{name}/run`
