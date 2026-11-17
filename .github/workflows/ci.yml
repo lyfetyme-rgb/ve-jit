@@ -23,4 +23,10 @@ jobs:
       - name: Run tests
         env:
           DATABASE_URL: sqlite:///./test.db
-        run: pytest tests -q
+          PYTHONPATH: ${{ github.workspace }}/backend
+        # 'python -m pytest' puts backend/ on sys.path; bare 'pytest' does not, which is why
+        # every test module failed collection with ModuleNotFoundError: No module named 'app'.
+        run: python -m pytest tests -q
+      - name: Run skill contract tests
+        working-directory: ${{ github.workspace }}
+        run: python -m pytest skills -q
