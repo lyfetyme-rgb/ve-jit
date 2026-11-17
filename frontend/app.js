@@ -65,8 +65,45 @@ async function normalizeDemoEvent() {
 document.getElementById("seedBtn").addEventListener("click", createDemoSku);
 document.getElementById("listBtn").addEventListener("click", listInventory);
 document.getElementById("iotBtn").addEventListener("click", normalizeDemoEvent);
+document.getElementById("planesBtn").addEventListener("click", loadPlanes);
+document.getElementById("recsBtn").addEventListener("click", loadRecommendations);
+document.getElementById("anomaliesBtn").addEventListener("click", loadAnomalies);
 
-Promise.all([loadHealth(), loadQueue(), loadJit(), listInventory()]).catch(err => {
+async function loadPlanes() {
+  const data = await fetchJson("/api/v1/planes");
+  const el = document.getElementById("planesOutput");
+  if (!el) return;
+  el.innerHTML = data.planes
+    .map(
+      (p) => `
+      <div class="plane">
+        <h3>${p.name}</h3>
+        <p class="plane-owns">Owns: ${p.owns} — ${p.primary_responsibility}</p>
+        <ul>${p.capabilities.map((c) => `<li>${c}</li>`).join("")}</ul>
+        <p class="plane-note">${p.executes_business_actions ? "Executes authorized business actions" : "Produces recommendations; never executes actions"}</p>
+      </div>`
+    )
+    .join("")
+    + `<p class="plane-rule">${data.governance_rule}</p>`;
+}
+
+async function loadRecommendations() {
+  const data = await fetchJson("/api/v1/intelligence/recommendations?status=PROPOSED&limit=10");
+  const el = document.getElementById("recsOutput");
+  if (el) {
+    el.textContent = data.recommendations.length
+      ? JSON.stringify(data.recommendations.map((r) => ({ uid: r.uid, kind: r.kind, subject: r.subject_id, summary: r.summary, confidence: r.confidence })), null, 2)
+      : "No proposed recommendations.";
+  }
+}
+
+async function loadAnomalies() {
+  const data = await fetchJson("/api/v1/intelligence/anomalies");
+  const el = document.getElementById("anomaliesOutput");
+  if (el) el.textContent = JSON.stringify(data.anomalies.slice(0, 15), null, 2);
+}
+
+Promise.all([loadHealth(), loadQueue(), loadJit(), listInventory(), loadPlanes()]).catch(err => {
   console.error(err);
 });
 

@@ -12,6 +12,7 @@ from starlette.responses import RedirectResponse
 
 from app.config import settings
 from app.db.database import Base, engine
+from app.planes import models as plane_models  # noqa: F401  (register plane tables with create_all)
 from app.api.health import router as health_router
 from app.api.inventory import router as inventory_router
 from app.api.queue import router as queue_router
@@ -21,6 +22,10 @@ from app.api.jit import router as jit_router
 from app.api.auth import router as auth_router
 from app.api.network_intelligence import router as network_intelligence_router
 from app.api.compliance import router as compliance_router
+from app.api.planes import router as planes_router
+from app.api.commerce import router as commerce_router
+from app.api.operations import router as operations_router
+from app.api.intelligence import router as intelligence_router
 from app.middleware.audit import AuditLogMiddleware
 from app.core.queue_management_ai import QueueDataProvider, QueueManagementAI, QueueMetrics, QueueMonitor
 
@@ -102,9 +107,17 @@ app.include_router(jit_router)
 app.include_router(auth_router)
 app.include_router(network_intelligence_router)
 app.include_router(compliance_router)
+app.include_router(planes_router)
+app.include_router(commerce_router)
+app.include_router(operations_router)
+app.include_router(intelligence_router)
 
-frontend_dir = Path(__file__).resolve().parents[2] / "frontend"
-if frontend_dir.exists():
+frontend_candidates = [
+    Path(__file__).resolve().parents[2] / "frontend",  # repo layout: backend/app/main.py -> repo root
+    Path("/app/frontend"),                             # container layout: compose mounts ./frontend here
+]
+frontend_dir = next((candidate for candidate in frontend_candidates if candidate.exists()), None)
+if frontend_dir is not None:
     app.mount("/ui", StaticFiles(directory=str(frontend_dir), html=True), name="ui")
 
 

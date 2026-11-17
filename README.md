@@ -5,10 +5,44 @@ queue management, procurement automation, and supply-chain visibility.
 
 ## Included
 - FastAPI backend with health, inventory, queue, IoT, analytics, and JIT demo endpoints
-- HTML dashboard UI served by FastAPI
+- **Three planes over one trusted data layer** — Commerce (POS/eCommerce transactions, pricing, promotions, loyalty),
+  Operations (append-only inventory ledger, procurement, receiving, DC transfers, supplier terms, vendor collaboration),
+  Intelligence (demand forecasting, anomaly detection, shelf availability, workforce guidance, supplier scorecards,
+  waste analysis) with the governance rule: Intelligence produces recommendations, Operations executes
+  authorized business actions, Commerce owns the customer-facing transaction. See `docs/THREE_PLANES.md`
+- HTML dashboard UI served by FastAPI (includes a live Three Planes panel)
 - PostgreSQL + Redis + Kafka + Prometheus + Grafana Docker stack
 - Tests, CI workflow, verification and deployment scripts
 - Kubernetes starter manifests
+
+## Three planes (Commerce / Operations / Intelligence)
+
+The platform splits responsibilities across three planes sharing one trusted
+data layer — see [`docs/THREE_PLANES.md`](docs/THREE_PLANES.md) for the full
+contract. Quick tour:
+
+```bash
+# Plane registry + governance rule
+curl http://localhost:8000/api/v1/planes
+
+# Price a SKU (price book is authoritative; promotions apply automatically)
+curl -X POST http://localhost:8000/api/v1/commerce/prices \
+  -H 'Content-Type: application/json' -d '{"sku":"DAIRY-001","unit_price":6.5}'
+
+# POST a POS transaction (idempotent on client_order_id)
+curl -X POST http://localhost:8000/api/v1/commerce/pos/transactions \
+  -H 'Content-Type: application/json' \
+  -d '{"register_id":"lane-1","payment_method":"card","lines":[{"sku":"DAIRY-001","quantity":2}]}'
+
+# Intelligence recommends; it cannot execute
+curl http://localhost:8000/api/v1/intelligence/anomalies
+
+# Human approves a recommendation, then Operations executes it
+curl -X POST http://localhost:8000/api/v1/intelligence/recommendations/<uid>/approve \
+  -H 'Content-Type: application/json' -d '{"approver":"manager-1"}'
+curl -X POST http://localhost:8000/api/v1/operations/recommendations/<uid>/execute \
+  -H 'Content-Type: application/json' -d '{"actor":"ops-1"}'
+```
 
 ## Quick start
 

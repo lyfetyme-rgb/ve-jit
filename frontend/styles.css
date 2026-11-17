@@ -52,6 +52,32 @@ pre {
   border-radius: 10px;
   min-height: 80px;
 }
+.planes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+}
+.plane {
+  background: #0b1220;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px;
+}
+.plane h3 { margin: 0 0 6px 0; color: #93c5fd; font-size: 16px; }
+.plane-owns { font-size: 13px; color: #cbd5e1; margin: 0 0 8px 0; }
+.plane ul { margin: 0; padding-left: 16px; font-size: 13px; }
+.plane-note { font-size: 12px; color: #fbbf24; margin: 8px 0 0 0; }
+.plane-rule {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: #a5f3fc;
+  border-top: 1px solid #334155;
+  padding-top: 10px;
+}
+@media (max-width: 900px) {
+  .planes-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 900px) {
   .grid { grid-template-columns: 1fr; }
   .span-2 { grid-column: span 1; }
