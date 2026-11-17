@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "lanes"
+  ],
+  "properties": {
+    "lanes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "lane_id",
+          "customers_in_line",
+          "average_wait_time"
+        ],
+        "properties": {
+          "lane_id": {
+            "type": "string"
+          },
+          "customers_in_line": {
+            "type": "integer"
+          },
+          "average_wait_time": {
+            "type": "number"
+          },
+          "cashier_speed": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "target_wait_seconds": {
+      "type": "number"
+    }
+  }
+}

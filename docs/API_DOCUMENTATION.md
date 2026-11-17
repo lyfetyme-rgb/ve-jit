@@ -23,10 +23,25 @@
 - `GET /api/v1/jit/demo`
 - `POST /api/v1/jit/emit-demo-event`
 
-## Planes
+## Three planes
 Full contracts and examples: `docs/THREE_PLANES.md`.
+Planes: `docs/THREE_PLANES.md`. Edge: `docs/EDGE_ARCHITECTURE.md`.
 - `GET /api/v1/planes` — plane registry and governance rule
 - `GET /api/v1/planes/{plane_id}` — `commerce` | `operations` | `intelligence`
+
+## Edge (Vendarix)
+Full contracts and examples: `docs/EDGE_ARCHITECTURE.md`.
+- `GET /api/v1/edge/status` — continuity state + value + outbox depth + approved skills
+- `GET /api/v1/edge/continuity/score` · `POST /api/v1/edge/continuity/transition`
+- `GET /api/v1/edge/recovery/status` · `POST /api/v1/edge/recovery/verify` · `POST /api/v1/edge/recovery/reconcile`
+- `POST /api/v1/edge/devices/heartbeat` · `GET /api/v1/edge/devices`
+- `POST /api/v1/edge/ingest` — adapter → manifest → fabric → outbox
+- `GET /api/v1/edge/events` · `GET /api/v1/edge/events/{event_id}` · `POST /api/v1/edge/events/{event_id}/reconcile`
+- `GET /api/v1/edge/outbox` · `POST /api/v1/edge/outbox/drain` (honest dry-run unless `CLOUD_SYNC_URL` is set)
+- `GET /api/v1/edge/checkpoints`
+- `GET /api/v1/edge/policy/rules` · `POST /api/v1/edge/policy/rules` · `POST /api/v1/edge/policy/seed-defaults`
+- `GET /api/v1/edge/skills` · `POST /api/v1/edge/skills/{name}/run`
+- `GET /api/v1/edge/event-types`
 
 ## Commerce
 - `POST /api/v1/commerce/prices` · `GET /api/v1/commerce/prices` · `GET /api/v1/commerce/prices/evaluate`

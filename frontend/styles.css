@@ -75,6 +75,18 @@ pre {
   border-top: 1px solid #334155;
   padding-top: 10px;
 }
+.edge-grid { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; margin-top: 10px; }
+.edge-state { font-size: 22px; font-weight: 800; padding: 18px 26px; border-radius: 12px; text-align: center; }
+.edge-state.ok { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
+.edge-state.warn { background: #422006; color: #fbbf24; border: 1px solid #f59e0b; }
+.edge-state.bad { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
+.edge-value { font-size: 34px; font-weight: 800; color: #93c5fd; }
+.edge-value span { display: block; font-size: 12px; font-weight: 400; color: #94a3b8; }
+.edge-comps { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.edge-comp { background: #0b1220; border: 1px solid #334155; border-radius: 8px; padding: 8px 10px; font-size: 11px; }
+.edge-comp span { display: block; color: #94a3b8; }
+.edge-comp b { color: #e2e8f0; font-size: 13px; }
+@media (max-width: 900px) { .edge-grid, .edge-comps { grid-template-columns: 1fr; } }
 @media (max-width: 900px) {
   .planes-grid { grid-template-columns: 1fr; }
 }

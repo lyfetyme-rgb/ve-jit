@@ -45,6 +45,15 @@ from app.planes.operations import (
     next_ref,
     record_waste,
 )
+from app.edge.continuity import ContinuityError, require_action_allowed
+
+
+def _safe_mode_guard(db: Session, action_class: str) -> None:
+    """Hard safety gate: SAFE_MODE blocks unsafe action classes regardless of score."""
+    try:
+        require_action_allowed(db, action_class)
+    except ContinuityError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
 
 router = APIRouter(prefix="/api/v1/operations", tags=["operations"])
 
@@ -158,6 +167,7 @@ def list_ledger(
 
 @router.post("/adjustments", status_code=201)
 def adjust_stock(payload: Adjustment, db: Session = Depends(get_db)):
+    _safe_mode_guard(db, "inventory_move")
     try:
         item, created = apply_stock_movement(
             db,
@@ -177,6 +187,7 @@ def adjust_stock(payload: Adjustment, db: Session = Depends(get_db)):
 
 @router.post("/waste", status_code=201)
 def record_waste_event(payload: WasteIn, db: Session = Depends(get_db)):
+    _safe_mode_guard(db, "waste_record")
     try:
         record = record_waste(
             db,
@@ -274,6 +285,7 @@ def get_purchase_order(po_number: str, db: Session = Depends(get_db)):
 
 @router.post("/purchase-orders/{po_number}/approve")
 def approve_purchase_order(po_number: str, payload: ApprovePurchaseOrder, db: Session = Depends(get_db)):
+    _safe_mode_guard(db, "purchase_order")
     po = _find_po(db, po_number)
     if po.status != "DRAFT":
         raise HTTPException(status_code=409, detail=f"Only DRAFT purchase orders can be approved; {po_number} is {po.status}")
@@ -304,6 +316,7 @@ def cancel_purchase_order(po_number: str, payload: CancelPurchaseOrder, db: Sess
 
 @router.post("/receiving", status_code=201)
 def receive_against_po(payload: ReceivingIn, db: Session = Depends(get_db)):
+    _safe_mode_guard(db, "receiving_put_away")
     po = _find_po(db, payload.po_number)
     if po.status == "CANCELLED":
         raise HTTPException(status_code=409, detail=f"{po.po_number} is cancelled")
@@ -390,6 +403,7 @@ def get_transfer(transfer_ref: str, db: Session = Depends(get_db)):
 
 @router.post("/transfers/{transfer_ref}/ship")
 def ship_transfer(transfer_ref: str, payload: TransferAction, db: Session = Depends(get_db)):
+    _safe_mode_guard(db, "transfer_ship")
     transfer = _find_transfer(db, transfer_ref)
     if transfer.status != "REQUESTED":
         raise HTTPException(status_code=409, detail=f"{transfer_ref} is {transfer.status}; only REQUESTED transfers ship")
@@ -415,6 +429,7 @@ def ship_transfer(transfer_ref: str, payload: TransferAction, db: Session = Depe
 
 @router.post("/transfers/{transfer_ref}/receive")
 def receive_transfer(transfer_ref: str, payload: TransferAction, db: Session = Depends(get_db)):
+    _safe_mode_guard(db, "transfer_receive")
     transfer = _find_transfer(db, transfer_ref)
     if transfer.status != "SHIPPED":
         raise HTTPException(status_code=409, detail=f"{transfer_ref} is {transfer.status}; only SHIPPED transfers can be received")
@@ -494,6 +509,15 @@ def execute_recommendation(uid: str, payload: ExecuteRecommendation, db: Session
     except RecommendationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
 
+    kind_guard = {
+        "REPLENISHMENT": "purchase_order",
+        "TRANSFER": "transfer_ship",
+        "RECONCILIATION": "inventory_move",
+        "WASTE_REVIEW": "waste_record",
+    }.get(rec.kind)
+    if kind_guard:
+        _safe_mode_guard(db, kind_guard)
+
     action = _parse_action(rec.recommended_action)
     execution_ref: Optional[str] = None
     detail: dict = {}
@@ -564,6 +588,32 @@ def execute_recommendation(uid: str, payload: ExecuteRecommendation, db: Session
         db.add(transfer)
         execution_ref = transfer.transfer_ref
         detail["transfer"] = transfer.transfer_ref
+
+    elif rec.kind == "RECONCILIATION":
+        if not action or not action.get("sku") or action.get("counted_quantity") is None:
+            raise HTTPException(status_code=422, detail="RECONCILIATION payload must include sku and counted_quantity")
+        from app.db.models import InventoryItem
+
+        sku = action["sku"]
+        counted = int(action["counted_quantity"])
+        item = db.query(InventoryItem).filter(InventoryItem.sku == sku).first()
+        expected = item.quantity if item else 0
+        delta = counted - expected
+        if delta == 0:
+            execution_ref = f"reconciliation:{rec.uid}:in_sync"
+            detail = {"sku": sku, "counted_quantity": counted, "expected_quantity": expected, "variance": 0, "cycle_count_applied": False}
+        else:
+            apply_stock_movement(
+                db,
+                sku=sku,
+                store_id=settings.STORE_ID,
+                delta=delta,
+                reason="CYCLE_COUNT",
+                actor=payload.actor,
+                ref=rec.uid,
+            )
+            execution_ref = f"cycle-count:{rec.uid}"
+            detail = {"sku": sku, "counted_quantity": counted, "expected_quantity": expected, "variance": delta, "cycle_count_applied": True}
 
     else:
         execution_ref = f"ack:{rec.uid}"

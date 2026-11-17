@@ -13,6 +13,7 @@ from starlette.responses import RedirectResponse
 from app.config import settings
 from app.db.database import Base, engine
 from app.planes import models as plane_models  # noqa: F401  (register plane tables with create_all)
+from app.edge import models as edge_models  # noqa: F401  (register edge tables with create_all)
 from app.api.health import router as health_router
 from app.api.inventory import router as inventory_router
 from app.api.queue import router as queue_router
@@ -26,6 +27,7 @@ from app.api.planes import router as planes_router
 from app.api.commerce import router as commerce_router
 from app.api.operations import router as operations_router
 from app.api.intelligence import router as intelligence_router
+from app.api.edge import router as edge_router
 from app.middleware.audit import AuditLogMiddleware
 from app.core.queue_management_ai import QueueDataProvider, QueueManagementAI, QueueMetrics, QueueMonitor
 
@@ -60,6 +62,14 @@ class DemoQueueDataProvider(QueueDataProvider):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+
+    # Deterministic edge policies must exist before any event is evaluated.
+    from app.db.database import SessionLocal
+    from app.edge.policy import seed_default_policies
+
+    with SessionLocal() as seed_db:
+        created = seed_default_policies(seed_db)
+        logger.info("Edge policy seed: %d default rule(s) created", created)
 
     ai_engine = QueueManagementAI(
         target_wait_seconds=settings.QUEUE_TARGET_WAIT_SECONDS,
@@ -111,6 +121,7 @@ app.include_router(planes_router)
 app.include_router(commerce_router)
 app.include_router(operations_router)
 app.include_router(intelligence_router)
+app.include_router(edge_router)
 
 frontend_candidates = [
     Path(__file__).resolve().parents[2] / "frontend",  # repo layout: backend/app/main.py -> repo root

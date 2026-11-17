@@ -7,6 +7,7 @@
 - **Commerce plane** — POS/eCommerce transaction rail, price book, promotions, loyalty (`app/api/commerce.py`, `app/planes/commerce.py`)
 - **Operations plane** — append-only inventory ledger, procurement, receiving, transfers, supplier terms, vendor collaboration (`app/api/operations.py`, `app/planes/operations.py`)
 - **Intelligence plane** — forecasting, anomaly detection, availability, workforce guidance, supplier scorecards, waste analysis; recommendations only (`app/api/intelligence.py`, `app/planes/intelligence.py`)
+- **Vendarix edge runtime** — hardware adapters, shared event contracts, deterministic policy engine, continuity state machine + value, transactional outbox, explicit recovery, approved local AI skills (`app/edge/`, `skills/`, `app/api/edge.py`)
 - PostgreSQL persistence
 - Redis caching
 - Kafka event streaming
@@ -27,5 +28,7 @@ customer-facing transaction. See `docs/THREE_PLANES.md`.
 - `/api/v1/commerce` — POS/eCommerce orders, pricing, promotions, loyalty
 - `/api/v1/operations` — ledger, adjustments, waste, procurement, receiving, transfers, vendors, action execution
 - `/api/v1/intelligence` — forecasts, anomalies, shelf availability, workforce guidance, supplier scorecards, waste analysis, recommendations
+- `/api/v1/edge` — edge status, ingest, continuity, recovery, policy rules, skills, outbox, devices, checkpoints
 
 Plane details and the normative spec: `docs/THREE_PLANES.md`.
+Edge node details and the normative spec: `docs/EDGE_ARCHITECTURE.md`.

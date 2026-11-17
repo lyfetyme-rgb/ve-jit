@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "supplier",
+    "pos"
+  ],
+  "properties": {
+    "supplier": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sla_otif_pct": {
+          "type": "number"
+        },
+        "sla_fill_rate_pct": {
+          "type": "number"
+        }
+      }
+    },
+    "pos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "units_ordered": {
+            "type": "integer"
+          },
+          "units_received": {
+            "type": "integer"
+          },
+          "on_time": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

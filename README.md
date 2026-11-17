@@ -10,6 +10,11 @@ queue management, procurement automation, and supply-chain visibility.
   Intelligence (demand forecasting, anomaly detection, shelf availability, workforce guidance, supplier scorecards,
   waste analysis) with the governance rule: Intelligence produces recommendations, Operations executes
   authorized business actions, Commerce owns the customer-facing transaction. See `docs/THREE_PLANES.md`
+- **Vendarix edge runtime** — the operational engine: hardware adapters (NCR Voyix, Toshiba TCGS JavaPOS/UPOS,
+  Diebold Nixdorf, scanner-scale), shared event contracts with payload-hash integrity, deterministic policy gates with
+  human authorization requests, a continuity state machine (ONLINE/DEGRADED/OFFLINE/SAFE_MODE) with an honest continuity
+  value, transactional outbox + explicit verify→replay→resolve→ack recovery, and approved local AI skills under `skills/`.
+  See `docs/EDGE_ARCHITECTURE.md`
 - HTML dashboard UI served by FastAPI (includes a live Three Planes panel)
 - PostgreSQL + Redis + Kafka + Prometheus + Grafana Docker stack
 - Tests, CI workflow, verification and deployment scripts
@@ -19,7 +24,25 @@ queue management, procurement automation, and supply-chain visibility.
 
 The platform splits responsibilities across three planes sharing one trusted
 data layer — see [`docs/THREE_PLANES.md`](docs/THREE_PLANES.md) for the full
-contract. Quick tour:
+contract, and [`docs/EDGE_ARCHITECTURE.md`](docs/EDGE_ARCHITECTURE.md) for the
+edge node that feeds them. Quick tour:
+
+```bash
+# Edge: continuity state machine + event fabric
+curl http://localhost:8000/api/v1/edge/status
+
+# Ingest an NCR Voyix POS event (policy may HOLD; humans authorize)
+curl -X POST http://localhost:8000/api/v1/edge/ingest \
+  -H 'Content-Type: application/json' \
+  -d '{"vendor":"ncr-voyix","device_id":"ncr-lane-1","source_seq":1,
+       "raw":{"msgType":"TX_COMPLETE","txnId":"T-100","lines":[{"sku":"DAIRY-001","qty":2,"price":3.5}],"total":7.0}}'
+
+# Recovery after connectivity returns is explicit
+curl -X POST http://localhost:8000/api/v1/edge/continuity/transition \
+  -H 'Content-Type: application/json' -d '{"to_state":"RECOVERING","actor":"ops-1","reason":"back online"}'
+curl -X POST http://localhost:8000/api/v1/edge/recovery/reconcile \
+  -H 'Content-Type: application/json' -d '{"actor":"ops-1","resolution":"accept_local"}'
+```
 
 ```bash
 # Plane registry + governance rule

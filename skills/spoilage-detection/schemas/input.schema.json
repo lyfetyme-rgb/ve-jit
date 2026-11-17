@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "items"
+  ],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "sku",
+          "quantity",
+          "unit_cost"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unit_cost": {
+            "type": "number"
+          },
+          "days_since_stock": {
+            "type": "integer"
+          },
+          "daily_velocity": {
+            "type": "number"
+          },
+          "expiry_days_remaining": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

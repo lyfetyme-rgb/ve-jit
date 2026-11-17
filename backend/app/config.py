@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     STORE_ID: str = "store_001"
     STORE_NAME: str = "Demo Store"
     STORE_TIMEZONE: str = "America/New_York"
+    TENANT_ID: str = "tenant_001"
+
+    # Edge -> cloud synchronization. Empty means dry-run (outbox drains report, send nothing).
+    CLOUD_SYNC_URL: str = ""
 
     QUEUE_TARGET_WAIT_SECONDS: int = 180
     QUEUE_MAX_WAIT_SECONDS: int = 300

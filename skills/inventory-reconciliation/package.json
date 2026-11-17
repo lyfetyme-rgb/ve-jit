@@ -1,0 +1,15 @@
+{
+  "name": "@vendarix/skill-inventory-reconciliation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Variance between counted and projected inventory",
+  "main": "run.ts",
+  "scripts": {
+    "start": "tsx run.ts",
+    "test": "python -m pytest tests/"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.0"
+  }
+}

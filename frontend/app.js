@@ -66,8 +66,24 @@ document.getElementById("seedBtn").addEventListener("click", createDemoSku);
 document.getElementById("listBtn").addEventListener("click", listInventory);
 document.getElementById("iotBtn").addEventListener("click", normalizeDemoEvent);
 document.getElementById("planesBtn").addEventListener("click", loadPlanes);
+document.getElementById("edgeBtn").addEventListener("click", loadEdge);
 document.getElementById("recsBtn").addEventListener("click", loadRecommendations);
 document.getElementById("anomaliesBtn").addEventListener("click", loadAnomalies);
+
+async function loadEdge() {
+  const data = await fetchJson("/api/v1/edge/status");
+  const el = document.getElementById("edgeOutput");
+  if (!el) return;
+  const c = data.continuity;
+  const rows = Object.entries(c.components)
+    .map(([k, v]) => `<div class="edge-comp"><span>${k}</span><b>${v.score === null ? "not measured" : v.score}</b></div>`)
+    .join("");
+  el.innerHTML = `
+    <div class="edge-state ${c.state === "ONLINE" ? "ok" : c.state === "SAFE_MODE" ? "bad" : "warn"}">${c.state}</div>
+    <div class="edge-value">${c.value.toFixed(1)}<span> / 100 continuity value</span></div>
+    <div class="edge-comps">${rows}</div>
+    <div class="plane-rule">Outbox pending: ${data.outbox_pending} · Cloud sync: ${data.cloud_sync_configured ? "configured" : "dry-run (not configured)"} · Approved skills: ${data.approved_skills}</div>`;
+}
 
 async function loadPlanes() {
   const data = await fetchJson("/api/v1/planes");
@@ -103,7 +119,7 @@ async function loadAnomalies() {
   if (el) el.textContent = JSON.stringify(data.anomalies.slice(0, 15), null, 2);
 }
 
-Promise.all([loadHealth(), loadQueue(), loadJit(), listInventory(), loadPlanes()]).catch(err => {
+Promise.all([loadHealth(), loadQueue(), loadJit(), listInventory(), loadPlanes(), loadEdge()]).catch(err => {
   console.error(err);
 });
 

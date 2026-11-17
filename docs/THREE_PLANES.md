@@ -14,6 +14,11 @@ absent and will be added when its specification is finalized.
 | **Operations** | Physical business processes | Inventory, purchasing, receiving, replenishment |
 | **Intelligence** | Analytical decisions | Forecasting, recommendations, anomaly detection |
 
+The **Vendarix edge node** (see `docs/EDGE_ARCHITECTURE.md`) is the operational
+engine around these planes: it receives hardware and enterprise events,
+enforces policy and authorization, and feeds validated operational signals into
+Operations and Intelligence.
+
 ### Commerce plane
 
 - POS integration
@@ -238,5 +243,6 @@ isolated SQLite database via a `get_db` dependency override.
   adding `location_id` to the item table (breaking migration); transfers are
   modelled per direction on a per-node basis until then.
 - Recommendation expiry is modelled but not enforced by a scheduler.
-- The Edge architecture (platform specification section 3) is **not** covered
-  by this document or the implementation; it will be added when specified.
+- The Edge architecture (platform specification section 3) is implemented in
+  `docs/EDGE_ARCHITECTURE.md` and `app/edge/` — live adapters, event fabric,
+  continuity state machine, outbox, recovery, and approved skills.

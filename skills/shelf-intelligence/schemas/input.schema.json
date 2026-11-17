@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "items"
+  ],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "sku",
+          "on_hand",
+          "reorder_point",
+          "daily_velocity"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "on_hand": {
+            "type": "integer"
+          },
+          "reorder_point": {
+            "type": "integer"
+          },
+          "daily_velocity": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

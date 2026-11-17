@@ -1,0 +1,6 @@
+{
+  "approved": true,
+  "version": 1,
+  "contract": "vendarix.skill.v1",
+  "timeout_seconds": 10
+}
