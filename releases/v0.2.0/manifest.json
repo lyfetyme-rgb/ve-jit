@@ -1,0 +1,1602 @@
+{
+  "commit": "main",
+  "components": [
+    {
+      "description": "C++, static/stripped, FORTIFY+PIE",
+      "id": "VEJIT-ADAPTER",
+      "license": "Business Source License 1.1"
+    },
+    {
+      "description": "Go, static (CGO_ENABLED=0)",
+      "id": "VEJIT-SYNC",
+      "license": "Business Source License 1.1"
+    },
+    {
+      "description": "Python FastAPI edge runtime",
+      "id": "VEJIT-EDGE",
+      "license": "Business Source License 1.1"
+    },
+    {
+      "description": "6 stdlib-only AI skills (subprocess JSON)",
+      "id": "VEJIT-SKILLS",
+      "license": "Business Source License 1.1"
+    },
+    {
+      "description": "append-only trigger set + schema notes",
+      "id": "VEJIT-SQL",
+      "license": "Business Source License 1.1"
+    },
+    {
+      "description": "systemd unit",
+      "id": "VEJIT-SD-EDGE",
+      "license": "Business Source License 1.1"
+    },
+    {
+      "description": "systemd unit",
+      "id": "VEJIT-SD-HW",
+      "license": "Business Source License 1.1"
+    },
+    {
+      "description": "systemd target",
+      "id": "VEJIT-SD-TGT",
+      "license": "Business Source License 1.1"
+    }
+  ],
+  "platforms": {
+    "amd64": {
+      "bundle": [
+        {
+          "name": "vendarix-edge_0.2.0_amd64.tar.gz",
+          "sha256": "88e8414464cb30385872301bd77460e802bbf7702e5622395344931f6a96d80d",
+          "size": 969481
+        }
+      ],
+      "debian_package": [
+        {
+          "name": "vendarix-edge_0.2.0_amd64.deb",
+          "sha256": "45ab6114ced7e26675dcbbd8e7548cb13c913c4151bc8c7d13731e6289ed005c",
+          "size": 849336
+        }
+      ],
+      "file_count": 126,
+      "files": [
+        {
+          "component": "VEJIT-SD-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/etc/systemd/system/vendarix-edge.service",
+          "sha256": "cd8ef1587847a7b4cf566210559f27c8d5dd40da8035b78c91493defc6e0eb69",
+          "size": 1012
+        },
+        {
+          "component": "VEJIT-SD-TGT",
+          "path": "vendarix-edge_0.2.0_amd64/etc/systemd/system/vendarix-edge.target",
+          "sha256": "34e3f2e887b52389539b06600d151a12e5bbcd8415bc0787d3106c8e4d8e6f71",
+          "size": 177
+        },
+        {
+          "component": "VEJIT-SD-HW",
+          "path": "vendarix-edge_0.2.0_amd64/etc/systemd/system/vendarix-hw-adapter.service",
+          "sha256": "1378deb8b6e2c7fe3ccf04ca6472e7246fb189ac894bf8870f63ab5a00da9207",
+          "size": 1166
+        },
+        {
+          "component": "VEJIT-SYNC",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/bin/vejit-sync",
+          "sha256": "23aa2abba0c8e882c999f7f9bf250a6186b5e89333b56ca5e1610f813710ea19",
+          "size": 1781912
+        },
+        {
+          "component": "VEJIT-ADAPTER",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/bin/vendarix-hw-adapter",
+          "sha256": "f5ed1a2cbbc485bb0582d5a7a96bd4202b88c93cbd8eff8a5e9614238c08a3cc",
+          "size": 174400
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/__init__.py",
+          "sha256": "8de809318b925bdd152a2328b5574d01a901bd854f8ab9be039a1ec8956e847f",
+          "size": 22
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/analytics.py",
+          "sha256": "c059eb9b5e0566b936db556f6ecad43eab4dc0f94c5a52287abb1e440db8007a",
+          "size": 308
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/auth.py",
+          "sha256": "56b9bdf106f46d959a67b1ce336ea85ab4633f69a56367575ea7697b32bbdfed",
+          "size": 881
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/cloud.py",
+          "sha256": "ca973b81a64c586c4e89eb1ba107ff40c4ec6eb105b7c696b356b21d122be29b",
+          "size": 7755
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/commerce.py",
+          "sha256": "2785cebb8fc6b23a9d2e720796456c10799e58b8d8a63b6a7576b6b951d909c4",
+          "size": 14384
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/compliance.py",
+          "sha256": "a80bb872515b6764a39df8ef242bc65a8de8dd2f3e936b797128d306ad388257",
+          "size": 767
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/edge.py",
+          "sha256": "6e9f829a5d3fe04b4ac52243f7d574cad2a5c4aad20875c4a8d3eb3033648137",
+          "size": 23465
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/health.py",
+          "sha256": "68e0398165d0cd017d80fbdde0362a445ba1bf7cb000f29c230206f013cc5e23",
+          "size": 287
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/intelligence.py",
+          "sha256": "bf7a25709d6f48e1751475e88d20202ef0df7c81b29b62c5a854344408c7b664",
+          "size": 9078
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/inventory.py",
+          "sha256": "b3877c27805ead659554f149224ff4e86a42c0fd6b9d49d0c3fe9d4d62de03b9",
+          "size": 1324
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/iot.py",
+          "sha256": "aea93883d4d16aa1a2075b4ecf35ffe338c852946e3ee6f399461b797e21302a",
+          "size": 419
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/jit.py",
+          "sha256": "61659173e343c7eaf2d1633ea6f3ee6d465b713ddedac06d236311497cbc51b7",
+          "size": 799
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/network_intelligence.py",
+          "sha256": "cd55d8122de0ea45462402fbed98354b8e069de12343b04f1028af69a80ee9c5",
+          "size": 2969
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/operations.py",
+          "sha256": "e3f328cc5b4212bf147d859981d3103f12ad88388b743bffc5adb3b3c5ad4eed",
+          "size": 29328
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/planes.py",
+          "sha256": "2042f8c0cc16e226afa3479e42c47952e182373ed06f0d1d82461b201c308e3e",
+          "size": 739
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/api/queue.py",
+          "sha256": "92e183985dd59b7aecf18f58da1013bd159aad3f09a216f7a5ae988a7fadde15",
+          "size": 2983
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/cloud/__init__.py",
+          "sha256": "37e36c7393a8d62422b1488c8c770fded1e3e5c90ae6839967b1d5fbb048837d",
+          "size": 71
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/cloud/models.py",
+          "sha256": "5710c1fdc1632f45f0fa82224f2e77765b4e96acf541dc8c009a6ad7ffd4c81d",
+          "size": 4397
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/cloud/policy_signer.py",
+          "sha256": "bc4a56d89b764eb966e7b61e34380505e5e9ee1f92dfaae427c82839248fadec",
+          "size": 2712
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/cloud/reconcile.py",
+          "sha256": "68be8928bdb1f79bd279150ca4204ad89802ae53d69220cb7a6763281ccfcb2b",
+          "size": 16217
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/cloud/replay_router.py",
+          "sha256": "66cb5ca024feb7dd7d21a66c618d9c7d9b59085f2d69f55bec2ad81a0114f025",
+          "size": 9023
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/config.py",
+          "sha256": "e9e50010f32b43b7e839f55ed63de3f93eb63681de297602b1144a2023d7d35b",
+          "size": 2482
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/__init__.py",
+          "sha256": "293a59f048fee2bf8382d1b2cf4307f7eff675486bc1b59cd20d6e3083be58f3",
+          "size": 789
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/analytics.py",
+          "sha256": "44908096abd2603a8cf7c929b445743f4d4c9fb6421298e121ac7ba8d2c15995",
+          "size": 333
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/compliance.py",
+          "sha256": "0f0734b4e18c3817d3bcd6fd4e7b2df64fd2b9c3aeb69c6d80df628f52b40e64",
+          "size": 1911
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/iot_integration.py",
+          "sha256": "a8fef6defee213ea80ae864813c22788c80d343c361f838b807869cbf255c0e0",
+          "size": 437
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/jit_engine.py",
+          "sha256": "40d36ee9ed120778409de1fe05c22eeb1f60473b3945dff946c92b1eb7796c64",
+          "size": 1467
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/kafka_service.py",
+          "sha256": "09d2d55858d956500b39375453db317e0dd5d7a5f823f489df4e29cda64d03c9",
+          "size": 849
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/network_intelligence.py",
+          "sha256": "9b6640791792e8d3ed7b57fe3b50265f836eb09799239fe8a7c2f92f2e6aa715",
+          "size": 11986
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/core/queue_management_ai.py",
+          "sha256": "8a7c98ff1d9fcf5f81407d55b9fc6188da08532ac63efbb67ddfa52583d9d2b5",
+          "size": 14834
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/db/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/db/database.py",
+          "sha256": "12d1d730db4164546b7e9d6ac104fcb206471e49e31cc052b22e1fb39cc4b3ae",
+          "size": 1301
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/db/models.py",
+          "sha256": "bfc1c6e15759c5dfc59f7bf03dda63854fe5cf5c3811bf425edca63599b50265",
+          "size": 833
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/__init__.py",
+          "sha256": "10eeecc61be5a12c1482fc3c4637d52cbd5d991523d2132c7f7b5664f21f66c5",
+          "size": 1236
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/adapters/__init__.py",
+          "sha256": "a6dfb4b27e41ce1e672c0533e931896f7c94c6d3440258edff9d5a4c26ea5e5e",
+          "size": 1241
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/adapters/base.py",
+          "sha256": "3f4470a6bbaee57a2efaaeb2f2558f09db98a0ccc8b39586b232287cb822a377",
+          "size": 2562
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/adapters/diebold_nixdorf.py",
+          "sha256": "9ce28d14e718370bdd1891a5ca2d8fb013b3b7a5a1da8e0b932425bc4c702b54",
+          "size": 2160
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/adapters/enterprise.py",
+          "sha256": "2df616a186c146eef31b0725e8c88ef5914ef435bea7c625bdeb71f463fcd78f",
+          "size": 1197
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/adapters/ncr_voyix.py",
+          "sha256": "10815e2ce280b889c6b2ab9d29ba12ccdcd774371c611e099ddc31c3e3625bb5",
+          "size": 2640
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/adapters/scanner_scale.py",
+          "sha256": "f7aaea0fc69dc44aba723703a0165a2f8e3ea80593c542e6eb7bbfdadfc1d9a2",
+          "size": 2491
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/adapters/toshiba_tcgs.py",
+          "sha256": "a7587d4d807441161db2df1f2fadfdcb918ca874d10c6ab2f34afda7847c5982",
+          "size": 2980
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/continuity.py",
+          "sha256": "c6f194630fa02e1a5ffb5bc5ba95879ad530526e16b2cb09bc39888f0e3ab237",
+          "size": 8347
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/contracts.py",
+          "sha256": "0e118d9c529db996bdd436102f7be6a0974bea2304caf4e23318a8f3b4bc9f58",
+          "size": 7442
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/fabric.py",
+          "sha256": "f4ea15e557e3cb4685a2bc662d0aa55298c15b6260a47368983e61df3d735bea",
+          "size": 8993
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/integrity.py",
+          "sha256": "66fb3d08cdf9c5702d6996d3b7cdd2f89c1c6c6f634b0021caa02cfa02a46652",
+          "size": 1616
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/models.py",
+          "sha256": "c96b96c824112da70562f9f2d82166e424440c305aeb6b3d52dda02ff3fe68ed",
+          "size": 9788
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/policy.py",
+          "sha256": "151460242ad5397245a89590a721c3a8d1401f4466d2af99a79d0b69586588c3",
+          "size": 11479
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/policy_bundle.py",
+          "sha256": "658238eb20e35a459df905b0c7341784421277463c513df9553ae3da89e43d29",
+          "size": 6479
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/policy_verifier.py",
+          "sha256": "c30c2d5fde1b60ab143e07d8b3713c14bdaf2a80e8cd7f28be076b62e94f9215",
+          "size": 3057
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/recovery.py",
+          "sha256": "187319cd78b9056e991c792124e72e7bcb5b39c500b1aa7ade5830a73e3c82d2",
+          "size": 18785
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/edge/skills.py",
+          "sha256": "f47984538c3969ceb2aceb44bb6f736b09f54e142a92ef2c5c23220607af1394",
+          "size": 6306
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/main.py",
+          "sha256": "4d9626f907b2a329b1a7e3df01a7f358bf0670df3224ab3dd64cddec24edf800",
+          "size": 5594
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/middleware/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/middleware/audit.py",
+          "sha256": "dba9177576d071ecb856f6ed01d36f5a6170599d5160fd9a6d5ecc4fbacf5245",
+          "size": 1412
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/pci_guard.py",
+          "sha256": "268f251e7e8c8a0686c1bc99f495eb7ef0539da39e9f61517cadf4ed080c665f",
+          "size": 7923
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/planes/__init__.py",
+          "sha256": "1e45ef7c16afabd1666263ff99bdcff2630f42a10e7324b37156a8a867cadcbb",
+          "size": 5230
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/planes/commerce.py",
+          "sha256": "15d040fddf12e0aa302df4aa5b377531ff471edca279a447acf9c6dd55df1480",
+          "size": 8984
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/planes/governance.py",
+          "sha256": "d3b020f0b50c0705640e5a7e2d1baaf82b247f1c33ec9dcfc18e31877ad6a7d7",
+          "size": 5448
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/planes/intelligence.py",
+          "sha256": "0e0547ca599067d4e3c4df6a7cf92996e41ee2e0152bb88c5b7f91915e0511a6",
+          "size": 12909
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/planes/models.py",
+          "sha256": "ee8a9ca854ee96085b01ac47b5d95a51ba9736fb56737380c0da757411c928db",
+          "size": 11126
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/planes/operations.py",
+          "sha256": "069cd38073c15bac720f6c487d47b889ed0f1326940f31df6c52755fab02bfa2",
+          "size": 5480
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/schemas/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/schemas/auth.py",
+          "sha256": "e7c1010b8ff12c8dbcb558a074c7afd1c88a3b42c0ece6615a7d9a5d2e3a5927",
+          "size": 187
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/schemas/inventory.py",
+          "sha256": "fd872689ee0de7a84fb6cc88d20229f5c7d120d5a48654ec364b92812a24661e",
+          "size": 473
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/security/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/security/auth.py",
+          "sha256": "b72670f12faebe67f4e26201af29fb1d1adf12ea8a890c0e1ea7448eec138d01",
+          "size": 717
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/workers/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/workers/network_worker.py",
+          "sha256": "e01278364bc02182dc30b897bb59f4ec9970c9429b946bd70e7adf2b13e9e21e",
+          "size": 1799
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/app/workers/queue_worker.py",
+          "sha256": "41f156b5ac32ea45d1731242ae2e8b4ee4478823801f0f350a202a898f8cc5f3",
+          "size": 1384
+        },
+        {
+          "component": "VEJIT-SQL",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/infrastructure/database/append_only.postgres.sql",
+          "sha256": "c2b70930655e3acdf0f55110d59867fc693d0adc768a202eb898134ed6151c28",
+          "size": 2438
+        },
+        {
+          "component": "VEJIT-SQL",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/infrastructure/database/append_only.sql",
+          "sha256": "e7187af3841a28485f8b9c2682861fdef56ca0bf89b153b1669a729e9306b4a1",
+          "size": 2115
+        },
+        {
+          "component": "VEJIT-SQL",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/infrastructure/database/cloud_reconciliation.sql",
+          "sha256": "610e42b0c3b8a1fd7037bf3df6284c6963a84a4d4fe2b07167685a8e1e9004bf",
+          "size": 2844
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/requirements-prod.txt",
+          "sha256": "ad8c187699788a609ae5f04cab433c22ab651e7e9116ecd822bc8e1be64f736f",
+          "size": 839
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/scripts/install-edge.sh",
+          "sha256": "02590fad47fd4ee2dab52b1ecba788e19b72d0ac7f96c379e0fd0d11b8e8dab8",
+          "size": 4342
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/demand-forecasting/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/demand-forecasting/package.json",
+          "sha256": "d2cdeadc22a68c49f34114f0fbf1e36a91514ef645506ba32d0ef8abab6f3f2e",
+          "size": 324
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/demand-forecasting/pyproject.toml",
+          "sha256": "e03b087fcfacab3e7e9a0168d27a3c81c615866e554fc9be8b83166fa939a16b",
+          "size": 294
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/demand-forecasting/run.ts",
+          "sha256": "d1f7734ba461ce6a9c0e3516214b91f0087499f850304d4ad512aa12b018c1f8",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/demand-forecasting/schemas/input.schema.json",
+          "sha256": "3bc9c5b5b861017172952244592d945fcbac7706fe7622af65ee684b94509bae",
+          "size": 535
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/demand-forecasting/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/demand-forecasting/skill.py",
+          "sha256": "3b8e07359a84b9d4b2382dfd26cd2cdd5f6d4ea8d47368a634a541fbe46174ee",
+          "size": 2500
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/inventory-reconciliation/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/inventory-reconciliation/package.json",
+          "sha256": "11b911cb893e8069b7ea2e41cd08b763fd35e24ebc86b6ea98f2e44734c1ff53",
+          "size": 349
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/inventory-reconciliation/pyproject.toml",
+          "sha256": "1ee450a10e6ce28942e48616579f0a6ffbb8d7ab1bce10ab6cb3c28ef892dc88",
+          "size": 319
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/inventory-reconciliation/run.ts",
+          "sha256": "a74b16ccc6096797428ba11758333083778f9d9ea101dce2638e804f2f2dc27e",
+          "size": 1115
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/inventory-reconciliation/schemas/input.schema.json",
+          "sha256": "de632f6cb6843acaba7e18b8464a29b833576ac99888bf6d1308da43484e6113",
+          "size": 549
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/inventory-reconciliation/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/inventory-reconciliation/skill.py",
+          "sha256": "3e2746253e84f810e6901469c1b6e03ec11c2d313f62fa168c9be309b813cdcb",
+          "size": 1918
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/queue-optimization/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/queue-optimization/package.json",
+          "sha256": "32827d6a9bac30ae463397b5650eecace446ac94e786766ea1cd508927f7da61",
+          "size": 335
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/queue-optimization/pyproject.toml",
+          "sha256": "25a873a8821162d8f9682e3d144506b904495e0e025f91765bbe54ecf9701202",
+          "size": 305
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/queue-optimization/run.ts",
+          "sha256": "20d37de8712d07361e55a5ab3c382695a97a052d24fa538de0e4227c48f39331",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/queue-optimization/schemas/input.schema.json",
+          "sha256": "5187b6ab66d5f085c7fc0b5ff30f54914cb9d8818a84d822111ddc9eea0d8405",
+          "size": 724
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/queue-optimization/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/queue-optimization/skill.py",
+          "sha256": "baf3df991f6c39f5d070cec22671ccd50fcc5dfd789606c9cf7cc0a244eaff0b",
+          "size": 1923
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/requirements.txt",
+          "sha256": "d8c255d9860d556ff3eb6211c441156692639188edba5deed6863b062f61b778",
+          "size": 365
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/shelf-intelligence/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/shelf-intelligence/package.json",
+          "sha256": "d1f98b4b171cfde500de911ff9ec357cc094d52bb6cf2f3dbcb40d877871adac",
+          "size": 338
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/shelf-intelligence/pyproject.toml",
+          "sha256": "87bf1401ef5b3f58afcc3c32f774ec1acd464ff98dc913a2931a204981c9dbd6",
+          "size": 308
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/shelf-intelligence/run.ts",
+          "sha256": "c99206ffae8aa0df9eba2a94a700bf7ee64bab99df3503d5ed343f2d7f7db456",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/shelf-intelligence/schemas/input.schema.json",
+          "sha256": "cef841735a487b20159319e34376e33b4baecd7f54d7d4f2974e7338dab91f21",
+          "size": 659
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/shelf-intelligence/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/shelf-intelligence/skill.py",
+          "sha256": "f3532c4e5c4b1aae762709714ad433e33262ac9c26176695c06713a8e12f7de1",
+          "size": 1972
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/spoilage-detection/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/spoilage-detection/package.json",
+          "sha256": "9630a43a87d71723bc95b5fa73cbde92a3a8399f65494f5826343de878f447f1",
+          "size": 334
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/spoilage-detection/pyproject.toml",
+          "sha256": "62bfba3284eac5d394fd58a3e4940dc72a725f35bdace5c493090e5e783ef61d",
+          "size": 304
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/spoilage-detection/run.ts",
+          "sha256": "29c1598efc48606ec54edf4c7663dba4ce08a66bfa49082e7e03aaeb406c5a04",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/spoilage-detection/schemas/input.schema.json",
+          "sha256": "49abed0e050ce0ed2778c781404504ae3ef4f1637a76e2bc3c5e1a22be9ec2db",
+          "size": 779
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/spoilage-detection/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/spoilage-detection/skill.py",
+          "sha256": "6b79756d722dd005981410768767d43a66c94280063e325088ca36cb122ee31b",
+          "size": 2126
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/supplier-analysis/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/supplier-analysis/package.json",
+          "sha256": "5a5f36ee29380f7bb74abdbfc985a22f7f9ec01063b5153ddfc72305a7049b53",
+          "size": 342
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/supplier-analysis/pyproject.toml",
+          "sha256": "d8eb2c384d230620b0f6b1a43d4e74cca146366260b48a4ff6413240d575967b",
+          "size": 312
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/supplier-analysis/run.ts",
+          "sha256": "1a48c9ce19cd2a8e12a1eb335f542964bd3b93a47e2d5eadaa4f6bb29f73991c",
+          "size": 1101
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/supplier-analysis/schemas/input.schema.json",
+          "sha256": "8cc02319cb4b4f2636deb9aa2396c00c68e98ae7db248008d50697ed842ed00a",
+          "size": 849
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/supplier-analysis/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/skills/supplier-analysis/skill.py",
+          "sha256": "87d7c544a1bf37661ef1b879c3985a72bfa921eaabc86dbb00ca515c564cb26b",
+          "size": 2188
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/systemd/vendarix-edge.service",
+          "sha256": "cd8ef1587847a7b4cf566210559f27c8d5dd40da8035b78c91493defc6e0eb69",
+          "size": 1012
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/systemd/vendarix-edge.target",
+          "sha256": "34e3f2e887b52389539b06600d151a12e5bbcd8415bc0787d3106c8e4d8e6f71",
+          "size": 177
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_amd64/opt/vendarix/edge/systemd/vendarix-hw-adapter.service",
+          "sha256": "1378deb8b6e2c7fe3ccf04ca6472e7246fb189ac894bf8870f63ab5a00da9207",
+          "size": 1166
+        }
+      ]
+    },
+    "arm64": {
+      "bundle": [
+        {
+          "name": "vendarix-edge_0.2.0_arm64.tar.gz",
+          "sha256": "b0b965cd2ba653b5ce6c8ca5170fc5184d2627621d8c0069342d66258888a8ce",
+          "size": 907926
+        }
+      ],
+      "debian_package": [
+        {
+          "name": "vendarix-edge_0.2.0_arm64.deb",
+          "sha256": "9584d39247798a0713628be48a70b16258560a23ead26c5a8e06391d78195cef",
+          "size": 783620
+        }
+      ],
+      "file_count": 126,
+      "files": [
+        {
+          "component": "VEJIT-SD-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/etc/systemd/system/vendarix-edge.service",
+          "sha256": "cd8ef1587847a7b4cf566210559f27c8d5dd40da8035b78c91493defc6e0eb69",
+          "size": 1012
+        },
+        {
+          "component": "VEJIT-SD-TGT",
+          "path": "vendarix-edge_0.2.0_arm64/etc/systemd/system/vendarix-edge.target",
+          "sha256": "34e3f2e887b52389539b06600d151a12e5bbcd8415bc0787d3106c8e4d8e6f71",
+          "size": 177
+        },
+        {
+          "component": "VEJIT-SD-HW",
+          "path": "vendarix-edge_0.2.0_arm64/etc/systemd/system/vendarix-hw-adapter.service",
+          "sha256": "1378deb8b6e2c7fe3ccf04ca6472e7246fb189ac894bf8870f63ab5a00da9207",
+          "size": 1166
+        },
+        {
+          "component": "VEJIT-SYNC",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/bin/vejit-sync",
+          "sha256": "592c5320516bd814b73652cb3027fd78ed3770a07cacdf04b1b2bfca47ecd7d6",
+          "size": 1835160
+        },
+        {
+          "component": "VEJIT-ADAPTER",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/bin/vendarix-hw-adapter",
+          "sha256": "4c56b5905ba720cde9c2a1bff79781f28d44847f128ccddc5254c3bf1457b34d",
+          "size": 198808
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/__init__.py",
+          "sha256": "8de809318b925bdd152a2328b5574d01a901bd854f8ab9be039a1ec8956e847f",
+          "size": 22
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/analytics.py",
+          "sha256": "c059eb9b5e0566b936db556f6ecad43eab4dc0f94c5a52287abb1e440db8007a",
+          "size": 308
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/auth.py",
+          "sha256": "56b9bdf106f46d959a67b1ce336ea85ab4633f69a56367575ea7697b32bbdfed",
+          "size": 881
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/cloud.py",
+          "sha256": "ca973b81a64c586c4e89eb1ba107ff40c4ec6eb105b7c696b356b21d122be29b",
+          "size": 7755
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/commerce.py",
+          "sha256": "2785cebb8fc6b23a9d2e720796456c10799e58b8d8a63b6a7576b6b951d909c4",
+          "size": 14384
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/compliance.py",
+          "sha256": "a80bb872515b6764a39df8ef242bc65a8de8dd2f3e936b797128d306ad388257",
+          "size": 767
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/edge.py",
+          "sha256": "6e9f829a5d3fe04b4ac52243f7d574cad2a5c4aad20875c4a8d3eb3033648137",
+          "size": 23465
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/health.py",
+          "sha256": "68e0398165d0cd017d80fbdde0362a445ba1bf7cb000f29c230206f013cc5e23",
+          "size": 287
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/intelligence.py",
+          "sha256": "bf7a25709d6f48e1751475e88d20202ef0df7c81b29b62c5a854344408c7b664",
+          "size": 9078
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/inventory.py",
+          "sha256": "b3877c27805ead659554f149224ff4e86a42c0fd6b9d49d0c3fe9d4d62de03b9",
+          "size": 1324
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/iot.py",
+          "sha256": "aea93883d4d16aa1a2075b4ecf35ffe338c852946e3ee6f399461b797e21302a",
+          "size": 419
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/jit.py",
+          "sha256": "61659173e343c7eaf2d1633ea6f3ee6d465b713ddedac06d236311497cbc51b7",
+          "size": 799
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/network_intelligence.py",
+          "sha256": "cd55d8122de0ea45462402fbed98354b8e069de12343b04f1028af69a80ee9c5",
+          "size": 2969
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/operations.py",
+          "sha256": "e3f328cc5b4212bf147d859981d3103f12ad88388b743bffc5adb3b3c5ad4eed",
+          "size": 29328
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/planes.py",
+          "sha256": "2042f8c0cc16e226afa3479e42c47952e182373ed06f0d1d82461b201c308e3e",
+          "size": 739
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/api/queue.py",
+          "sha256": "92e183985dd59b7aecf18f58da1013bd159aad3f09a216f7a5ae988a7fadde15",
+          "size": 2983
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/cloud/__init__.py",
+          "sha256": "37e36c7393a8d62422b1488c8c770fded1e3e5c90ae6839967b1d5fbb048837d",
+          "size": 71
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/cloud/models.py",
+          "sha256": "5710c1fdc1632f45f0fa82224f2e77765b4e96acf541dc8c009a6ad7ffd4c81d",
+          "size": 4397
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/cloud/policy_signer.py",
+          "sha256": "bc4a56d89b764eb966e7b61e34380505e5e9ee1f92dfaae427c82839248fadec",
+          "size": 2712
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/cloud/reconcile.py",
+          "sha256": "68be8928bdb1f79bd279150ca4204ad89802ae53d69220cb7a6763281ccfcb2b",
+          "size": 16217
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/cloud/replay_router.py",
+          "sha256": "66cb5ca024feb7dd7d21a66c618d9c7d9b59085f2d69f55bec2ad81a0114f025",
+          "size": 9023
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/config.py",
+          "sha256": "e9e50010f32b43b7e839f55ed63de3f93eb63681de297602b1144a2023d7d35b",
+          "size": 2482
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/__init__.py",
+          "sha256": "293a59f048fee2bf8382d1b2cf4307f7eff675486bc1b59cd20d6e3083be58f3",
+          "size": 789
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/analytics.py",
+          "sha256": "44908096abd2603a8cf7c929b445743f4d4c9fb6421298e121ac7ba8d2c15995",
+          "size": 333
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/compliance.py",
+          "sha256": "0f0734b4e18c3817d3bcd6fd4e7b2df64fd2b9c3aeb69c6d80df628f52b40e64",
+          "size": 1911
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/iot_integration.py",
+          "sha256": "a8fef6defee213ea80ae864813c22788c80d343c361f838b807869cbf255c0e0",
+          "size": 437
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/jit_engine.py",
+          "sha256": "40d36ee9ed120778409de1fe05c22eeb1f60473b3945dff946c92b1eb7796c64",
+          "size": 1467
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/kafka_service.py",
+          "sha256": "09d2d55858d956500b39375453db317e0dd5d7a5f823f489df4e29cda64d03c9",
+          "size": 849
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/network_intelligence.py",
+          "sha256": "9b6640791792e8d3ed7b57fe3b50265f836eb09799239fe8a7c2f92f2e6aa715",
+          "size": 11986
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/core/queue_management_ai.py",
+          "sha256": "8a7c98ff1d9fcf5f81407d55b9fc6188da08532ac63efbb67ddfa52583d9d2b5",
+          "size": 14834
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/db/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/db/database.py",
+          "sha256": "12d1d730db4164546b7e9d6ac104fcb206471e49e31cc052b22e1fb39cc4b3ae",
+          "size": 1301
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/db/models.py",
+          "sha256": "bfc1c6e15759c5dfc59f7bf03dda63854fe5cf5c3811bf425edca63599b50265",
+          "size": 833
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/__init__.py",
+          "sha256": "10eeecc61be5a12c1482fc3c4637d52cbd5d991523d2132c7f7b5664f21f66c5",
+          "size": 1236
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/adapters/__init__.py",
+          "sha256": "a6dfb4b27e41ce1e672c0533e931896f7c94c6d3440258edff9d5a4c26ea5e5e",
+          "size": 1241
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/adapters/base.py",
+          "sha256": "3f4470a6bbaee57a2efaaeb2f2558f09db98a0ccc8b39586b232287cb822a377",
+          "size": 2562
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/adapters/diebold_nixdorf.py",
+          "sha256": "9ce28d14e718370bdd1891a5ca2d8fb013b3b7a5a1da8e0b932425bc4c702b54",
+          "size": 2160
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/adapters/enterprise.py",
+          "sha256": "2df616a186c146eef31b0725e8c88ef5914ef435bea7c625bdeb71f463fcd78f",
+          "size": 1197
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/adapters/ncr_voyix.py",
+          "sha256": "10815e2ce280b889c6b2ab9d29ba12ccdcd774371c611e099ddc31c3e3625bb5",
+          "size": 2640
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/adapters/scanner_scale.py",
+          "sha256": "f7aaea0fc69dc44aba723703a0165a2f8e3ea80593c542e6eb7bbfdadfc1d9a2",
+          "size": 2491
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/adapters/toshiba_tcgs.py",
+          "sha256": "a7587d4d807441161db2df1f2fadfdcb918ca874d10c6ab2f34afda7847c5982",
+          "size": 2980
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/continuity.py",
+          "sha256": "c6f194630fa02e1a5ffb5bc5ba95879ad530526e16b2cb09bc39888f0e3ab237",
+          "size": 8347
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/contracts.py",
+          "sha256": "0e118d9c529db996bdd436102f7be6a0974bea2304caf4e23318a8f3b4bc9f58",
+          "size": 7442
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/fabric.py",
+          "sha256": "f4ea15e557e3cb4685a2bc662d0aa55298c15b6260a47368983e61df3d735bea",
+          "size": 8993
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/integrity.py",
+          "sha256": "66fb3d08cdf9c5702d6996d3b7cdd2f89c1c6c6f634b0021caa02cfa02a46652",
+          "size": 1616
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/models.py",
+          "sha256": "c96b96c824112da70562f9f2d82166e424440c305aeb6b3d52dda02ff3fe68ed",
+          "size": 9788
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/policy.py",
+          "sha256": "151460242ad5397245a89590a721c3a8d1401f4466d2af99a79d0b69586588c3",
+          "size": 11479
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/policy_bundle.py",
+          "sha256": "658238eb20e35a459df905b0c7341784421277463c513df9553ae3da89e43d29",
+          "size": 6479
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/policy_verifier.py",
+          "sha256": "c30c2d5fde1b60ab143e07d8b3713c14bdaf2a80e8cd7f28be076b62e94f9215",
+          "size": 3057
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/recovery.py",
+          "sha256": "187319cd78b9056e991c792124e72e7bcb5b39c500b1aa7ade5830a73e3c82d2",
+          "size": 18785
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/edge/skills.py",
+          "sha256": "f47984538c3969ceb2aceb44bb6f736b09f54e142a92ef2c5c23220607af1394",
+          "size": 6306
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/main.py",
+          "sha256": "4d9626f907b2a329b1a7e3df01a7f358bf0670df3224ab3dd64cddec24edf800",
+          "size": 5594
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/middleware/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/middleware/audit.py",
+          "sha256": "dba9177576d071ecb856f6ed01d36f5a6170599d5160fd9a6d5ecc4fbacf5245",
+          "size": 1412
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/pci_guard.py",
+          "sha256": "268f251e7e8c8a0686c1bc99f495eb7ef0539da39e9f61517cadf4ed080c665f",
+          "size": 7923
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/planes/__init__.py",
+          "sha256": "1e45ef7c16afabd1666263ff99bdcff2630f42a10e7324b37156a8a867cadcbb",
+          "size": 5230
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/planes/commerce.py",
+          "sha256": "15d040fddf12e0aa302df4aa5b377531ff471edca279a447acf9c6dd55df1480",
+          "size": 8984
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/planes/governance.py",
+          "sha256": "d3b020f0b50c0705640e5a7e2d1baaf82b247f1c33ec9dcfc18e31877ad6a7d7",
+          "size": 5448
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/planes/intelligence.py",
+          "sha256": "0e0547ca599067d4e3c4df6a7cf92996e41ee2e0152bb88c5b7f91915e0511a6",
+          "size": 12909
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/planes/models.py",
+          "sha256": "ee8a9ca854ee96085b01ac47b5d95a51ba9736fb56737380c0da757411c928db",
+          "size": 11126
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/planes/operations.py",
+          "sha256": "069cd38073c15bac720f6c487d47b889ed0f1326940f31df6c52755fab02bfa2",
+          "size": 5480
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/schemas/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/schemas/auth.py",
+          "sha256": "e7c1010b8ff12c8dbcb558a074c7afd1c88a3b42c0ece6615a7d9a5d2e3a5927",
+          "size": 187
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/schemas/inventory.py",
+          "sha256": "fd872689ee0de7a84fb6cc88d20229f5c7d120d5a48654ec364b92812a24661e",
+          "size": 473
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/security/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/security/auth.py",
+          "sha256": "b72670f12faebe67f4e26201af29fb1d1adf12ea8a890c0e1ea7448eec138d01",
+          "size": 717
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/workers/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/workers/network_worker.py",
+          "sha256": "e01278364bc02182dc30b897bb59f4ec9970c9429b946bd70e7adf2b13e9e21e",
+          "size": 1799
+        },
+        {
+          "component": "VEJIT-EDGE",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/app/workers/queue_worker.py",
+          "sha256": "41f156b5ac32ea45d1731242ae2e8b4ee4478823801f0f350a202a898f8cc5f3",
+          "size": 1384
+        },
+        {
+          "component": "VEJIT-SQL",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/infrastructure/database/append_only.postgres.sql",
+          "sha256": "c2b70930655e3acdf0f55110d59867fc693d0adc768a202eb898134ed6151c28",
+          "size": 2438
+        },
+        {
+          "component": "VEJIT-SQL",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/infrastructure/database/append_only.sql",
+          "sha256": "e7187af3841a28485f8b9c2682861fdef56ca0bf89b153b1669a729e9306b4a1",
+          "size": 2115
+        },
+        {
+          "component": "VEJIT-SQL",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/infrastructure/database/cloud_reconciliation.sql",
+          "sha256": "610e42b0c3b8a1fd7037bf3df6284c6963a84a4d4fe2b07167685a8e1e9004bf",
+          "size": 2844
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/requirements-prod.txt",
+          "sha256": "ad8c187699788a609ae5f04cab433c22ab651e7e9116ecd822bc8e1be64f736f",
+          "size": 839
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/scripts/install-edge.sh",
+          "sha256": "02590fad47fd4ee2dab52b1ecba788e19b72d0ac7f96c379e0fd0d11b8e8dab8",
+          "size": 4342
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/demand-forecasting/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/demand-forecasting/package.json",
+          "sha256": "d2cdeadc22a68c49f34114f0fbf1e36a91514ef645506ba32d0ef8abab6f3f2e",
+          "size": 324
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/demand-forecasting/pyproject.toml",
+          "sha256": "e03b087fcfacab3e7e9a0168d27a3c81c615866e554fc9be8b83166fa939a16b",
+          "size": 294
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/demand-forecasting/run.ts",
+          "sha256": "d1f7734ba461ce6a9c0e3516214b91f0087499f850304d4ad512aa12b018c1f8",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/demand-forecasting/schemas/input.schema.json",
+          "sha256": "3bc9c5b5b861017172952244592d945fcbac7706fe7622af65ee684b94509bae",
+          "size": 535
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/demand-forecasting/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/demand-forecasting/skill.py",
+          "sha256": "3b8e07359a84b9d4b2382dfd26cd2cdd5f6d4ea8d47368a634a541fbe46174ee",
+          "size": 2500
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/inventory-reconciliation/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/inventory-reconciliation/package.json",
+          "sha256": "11b911cb893e8069b7ea2e41cd08b763fd35e24ebc86b6ea98f2e44734c1ff53",
+          "size": 349
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/inventory-reconciliation/pyproject.toml",
+          "sha256": "1ee450a10e6ce28942e48616579f0a6ffbb8d7ab1bce10ab6cb3c28ef892dc88",
+          "size": 319
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/inventory-reconciliation/run.ts",
+          "sha256": "a74b16ccc6096797428ba11758333083778f9d9ea101dce2638e804f2f2dc27e",
+          "size": 1115
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/inventory-reconciliation/schemas/input.schema.json",
+          "sha256": "de632f6cb6843acaba7e18b8464a29b833576ac99888bf6d1308da43484e6113",
+          "size": 549
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/inventory-reconciliation/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/inventory-reconciliation/skill.py",
+          "sha256": "3e2746253e84f810e6901469c1b6e03ec11c2d313f62fa168c9be309b813cdcb",
+          "size": 1918
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/queue-optimization/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/queue-optimization/package.json",
+          "sha256": "32827d6a9bac30ae463397b5650eecace446ac94e786766ea1cd508927f7da61",
+          "size": 335
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/queue-optimization/pyproject.toml",
+          "sha256": "25a873a8821162d8f9682e3d144506b904495e0e025f91765bbe54ecf9701202",
+          "size": 305
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/queue-optimization/run.ts",
+          "sha256": "20d37de8712d07361e55a5ab3c382695a97a052d24fa538de0e4227c48f39331",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/queue-optimization/schemas/input.schema.json",
+          "sha256": "5187b6ab66d5f085c7fc0b5ff30f54914cb9d8818a84d822111ddc9eea0d8405",
+          "size": 724
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/queue-optimization/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/queue-optimization/skill.py",
+          "sha256": "baf3df991f6c39f5d070cec22671ccd50fcc5dfd789606c9cf7cc0a244eaff0b",
+          "size": 1923
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/requirements.txt",
+          "sha256": "d8c255d9860d556ff3eb6211c441156692639188edba5deed6863b062f61b778",
+          "size": 365
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/shelf-intelligence/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/shelf-intelligence/package.json",
+          "sha256": "d1f98b4b171cfde500de911ff9ec357cc094d52bb6cf2f3dbcb40d877871adac",
+          "size": 338
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/shelf-intelligence/pyproject.toml",
+          "sha256": "87bf1401ef5b3f58afcc3c32f774ec1acd464ff98dc913a2931a204981c9dbd6",
+          "size": 308
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/shelf-intelligence/run.ts",
+          "sha256": "c99206ffae8aa0df9eba2a94a700bf7ee64bab99df3503d5ed343f2d7f7db456",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/shelf-intelligence/schemas/input.schema.json",
+          "sha256": "cef841735a487b20159319e34376e33b4baecd7f54d7d4f2974e7338dab91f21",
+          "size": 659
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/shelf-intelligence/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/shelf-intelligence/skill.py",
+          "sha256": "f3532c4e5c4b1aae762709714ad433e33262ac9c26176695c06713a8e12f7de1",
+          "size": 1972
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/spoilage-detection/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/spoilage-detection/package.json",
+          "sha256": "9630a43a87d71723bc95b5fa73cbde92a3a8399f65494f5826343de878f447f1",
+          "size": 334
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/spoilage-detection/pyproject.toml",
+          "sha256": "62bfba3284eac5d394fd58a3e4940dc72a725f35bdace5c493090e5e783ef61d",
+          "size": 304
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/spoilage-detection/run.ts",
+          "sha256": "29c1598efc48606ec54edf4c7663dba4ce08a66bfa49082e7e03aaeb406c5a04",
+          "size": 1103
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/spoilage-detection/schemas/input.schema.json",
+          "sha256": "49abed0e050ce0ed2778c781404504ae3ef4f1637a76e2bc3c5e1a22be9ec2db",
+          "size": 779
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/spoilage-detection/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/spoilage-detection/skill.py",
+          "sha256": "6b79756d722dd005981410768767d43a66c94280063e325088ca36cb122ee31b",
+          "size": 2126
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/supplier-analysis/config/default.json",
+          "sha256": "97def0228584d8f8f35f067a5f9f2b37d91beb57798b42d9f419fa2834ffec45",
+          "size": 99
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/supplier-analysis/package.json",
+          "sha256": "5a5f36ee29380f7bb74abdbfc985a22f7f9ec01063b5153ddfc72305a7049b53",
+          "size": 342
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/supplier-analysis/pyproject.toml",
+          "sha256": "d8eb2c384d230620b0f6b1a43d4e74cca146366260b48a4ff6413240d575967b",
+          "size": 312
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/supplier-analysis/run.ts",
+          "sha256": "1a48c9ce19cd2a8e12a1eb335f542964bd3b93a47e2d5eadaa4f6bb29f73991c",
+          "size": 1101
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/supplier-analysis/schemas/input.schema.json",
+          "sha256": "8cc02319cb4b4f2636deb9aa2396c00c68e98ae7db248008d50697ed842ed00a",
+          "size": 849
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/supplier-analysis/schemas/output.schema.json",
+          "sha256": "2fda167622b2f214e19df2a18a4bc384b1e4f04ce40ea84a725c5f1517c1dd50",
+          "size": 406
+        },
+        {
+          "component": "VEJIT-SKILLS",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/skills/supplier-analysis/skill.py",
+          "sha256": "87d7c544a1bf37661ef1b879c3985a72bfa921eaabc86dbb00ca515c564cb26b",
+          "size": 2188
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/systemd/vendarix-edge.service",
+          "sha256": "cd8ef1587847a7b4cf566210559f27c8d5dd40da8035b78c91493defc6e0eb69",
+          "size": 1012
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/systemd/vendarix-edge.target",
+          "sha256": "34e3f2e887b52389539b06600d151a12e5bbcd8415bc0787d3106c8e4d8e6f71",
+          "size": 177
+        },
+        {
+          "component": "VEJIT-MISC",
+          "path": "vendarix-edge_0.2.0_arm64/opt/vendarix/edge/systemd/vendarix-hw-adapter.service",
+          "sha256": "1378deb8b6e2c7fe3ccf04ca6472e7246fb189ac894bf8870f63ab5a00da9207",
+          "size": 1166
+        }
+      ]
+    }
+  },
+  "produced_at": "2026-11-17T21:40:09Z",
+  "product": "vendarix-edge",
+  "schema": "vendarix.release.manifest.v1",
+  "tag": "v0.2.0",
+  "version": "0.2.0"
+}

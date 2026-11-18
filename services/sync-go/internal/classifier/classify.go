@@ -1,4 +1,4 @@
-// Package classify implements the commutative delta conflict classifier used
+﻿// package classifier implements the commutative delta conflict classifier used
 // by the watermark-replay step: when an edge node reconnects after a long
 // offline period, its outbound events must be replayed without false-positive
 // version conflicts against cloud state.
@@ -7,15 +7,15 @@
 //
 //   - Pure SALE deltas (all negative) commute with each other. A bulk sales
 //     replay can be applied as one aggregate commutative delta per SKU.
-//   - RESTOCK/ADJUSTMENT deltas do NOT commute with SALEs on the same SKU —
-//     ordering matters — so they are quarantined for human review.
+//   - RESTOCK/ADJUSTMENT deltas do NOT commute with SALEs on the same SKU â€”
+//     ordering matters â€” so they are quarantined for human review.
 //   - Any event that would drive on-hand below the supplied baseline, or an
 //     oversell condition, is quarantined regardless of mix.
 //   - Events with unknown action classes are quarantined (fail closed).
 //
 // The classifier never writes to the operational or audit database. It only
 // emits verdicts for a human (or the gated recovery flow) to apply.
-package classify
+package classifier
 
 import (
 	"fmt"

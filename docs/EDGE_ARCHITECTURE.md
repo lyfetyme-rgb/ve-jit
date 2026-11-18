@@ -346,7 +346,8 @@ monolith; the edge is implemented as a first-class module inside it
 | `packages/policy-engine` | `app/edge/policy.py` |
 | `packages/audit-sdk` | `app/middleware/audit.py` + recommendation lifecycle |
 | `skills/*` | ✅ `skills/` at repository root — exact target layout |
-| `services/sync-go`, `services/replay-go` | ✅ `services/sync-go/` — replay classifier (watermark-replay semantics) |
+| `services/sync-go`, `services/replay-go` | ✅ `services/sync-go/` — replay classifier (watermark-replay semantics); `internal/classifier` + `cmd/vejit-sync` |
+| `migrations/` | ✅ `infrastructure/migrations/` — forward-only numbered migrations + idempotent runner + 0000/0001/0002 shipped |
 | `services/hardware-native/cpp` | ✅ `services/hardware_adapter/` — C++ UDS daemon + systemd unit |
 | `infrastructure/monorepo tooling` | standard `backend/` layout retained |
 
@@ -433,3 +434,4 @@ Violation of this rule is an architectural defect, not an optimization.
    same command protocol.
 4. Real banner interface control documents replacing the demo contracts.
 5. mTLS to the enterprise cloud; recovery remains the reconciliation gate.
+6. ✅ v0.2.0 release manifest (SKU → release mapping, `releases/<tag>/manifest.json`) + forward-only migration tooling (`infrastructure/migrations/`) are shipped — operators and QSAs can verify what lands on each store from the public release page.

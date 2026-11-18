@@ -31,7 +31,7 @@ etc/systemd/system/         # vendarix-edge.service, vendarix-hw-adapter.service
 
 1. **verify-gates** — full test suite + skill schema/isolation audit + `go vet`/`go test -race` + C++ `-Werror` build and UDS integration test (this is the gate; a red gate blocks packaging)
 2. **build-and-package** (matrix `amd64`, `arm64`) — cross-compiles the sidecars (`aarch64-linux-gnu-g++` for arm64), packages with `dpkg-deb`, generates per-arch `.sha256`
-3. **publish-release** — merges checksums and creates the GitHub Release with generated notes
+3. **publish-release** — merges checksums, **generates `manifest.json` (the SKU → release mapping)** and creates the GitHub Release with generated notes; artifacts attach automatically
 
 ## Manual build
 
@@ -54,7 +54,7 @@ The installer is idempotent: it creates the `vendarix-edge`/`vendarix-hw` users,
 `/var/lib/vendarix`, `/run/vendarix`, `/opt/vendarix/venv`, installs the
 runtime dependencies, applies the append-only triggers to the local SQLite
 database, installs + enables the systemd units, starts `vendarix-edge.target`
-and waits for `/run/vendarix/edge.sock` to answer `/health`.
+and waits for `/run/vendarix/edge.sock` to answer `/health`. Fresh databases should run `infrastructure/migrations/migrate.py` after the app's first start; see that directory's README.
 
 Architecture assignment: `amd64` → store back-office servers and POS lanes;
 `arm64` → compact edge gateways. Both bundles are identical except for the

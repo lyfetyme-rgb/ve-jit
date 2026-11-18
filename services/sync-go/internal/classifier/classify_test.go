@@ -1,4 +1,4 @@
-package classify
+﻿package classifier
 
 import (
 	"reflect"

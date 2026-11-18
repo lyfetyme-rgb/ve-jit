@@ -1,4 +1,4 @@
-// vejit-sync — stateless replay classifier for the Vendarix edge node.
+﻿// vejit-sync â€” stateless replay classifier for the Vendarix edge node.
 //
 // Reads a snapshot of pending outbound deltas (JSON lines, one delta per line)
 // plus a baseline file mapping SKU -> on-hand at the last synced watermark, and
@@ -30,7 +30,7 @@ import (
 	"io"
 	"os"
 
-	"vendarix/sync-go/classify"
+	"vendarix/sync-go/internal/classifier"
 )
 
 var version = "dev" // stamped at build time: -ldflags="-X main.version=x.y.z"
@@ -61,7 +61,7 @@ func main() {
 		fatal(err.Error())
 	}
 
-	verdicts := classify.Classify(deltas, baseline)
+	verdicts := classifier.Classify(deltas, baseline)
 
 	w := io.Writer(os.Stdout)
 	if *outPath != "" {
@@ -93,7 +93,7 @@ func readBaseline(path string) (map[string]int, error) {
 	return baseline, nil
 }
 
-func readDeltas(path string) ([]classify.Delta, error) {
+func readDeltas(path string) ([]classifier.Delta, error) {
 	var reader io.Reader = os.Stdin
 	if path != "-" {
 		file, err := os.Open(path)
@@ -104,7 +104,7 @@ func readDeltas(path string) ([]classify.Delta, error) {
 		reader = file
 	}
 
-	deltas := []classify.Delta{}
+	deltas := []classifier.Delta{}
 	scanner := bufio.NewScanner(reader)
 	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
 	lineNo := 0
@@ -114,7 +114,7 @@ func readDeltas(path string) ([]classify.Delta, error) {
 		if len(line) == 0 {
 			continue
 		}
-		var delta classify.Delta
+		var delta classifier.Delta
 		if err := json.Unmarshal(line, &delta); err != nil {
 			return nil, fmt.Errorf("line %d: parse delta: %w", lineNo, err)
 		}
