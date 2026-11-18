@@ -124,6 +124,9 @@ jobs:
     name: Publish GitHub Release
     needs: build-and-package
     runs-on: ubuntu-24.04
+    # production environment: linked to the production branch, requires manual
+    # reviewer approval before any release artifact is published.
+    environment: production
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v8

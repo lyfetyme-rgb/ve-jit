@@ -2,8 +2,17 @@ name: VE-JIT CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - dev
+      - staging
+      - main
+      - production
   pull_request:
+    branches:
+      - dev
+      - staging
+      - main
+      - production
 
 jobs:
   test:
