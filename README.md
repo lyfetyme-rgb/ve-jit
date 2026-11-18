@@ -21,6 +21,8 @@ queue management, procurement automation, and supply-chain visibility.
 - **Cloud recovery ingestion** — hash-chain continuity vs per-store watermark tip, idempotent dedup ledger,
   quarantine-first HITL reconciliation (`POST /api/v1/cloud/recovery/sessions`), payload-CAS apply
 - **Compliance posture** — declared PCI-DSS out-of-scope boundary: non-PCI SKU/inventory telemetry only, HTTP 422 enforcement at the API edge (Luhn detector + card-named fields), redacting audit middleware, `GET /api/v1/compliance/pci-scope` machine-readable posture. See `docs/PCI_SCOPE.md`
+- **Release manifests** — `releases/<tag>/manifest.json` attaches to every GitHub Release automatically: the SKU → release mapping with per-file SHA256 for both platform bundles (see `releases/README.md`)
+- **Migrations** — `infrastructure/migrations/` forward-only numbered SQL migrations (0000 baseline, 0001 append-only triggers, 0002 cloud reconciliation) with an idempotent dependency-free runner (`--status`, `--baseline`, `--db`)
 - **Edge sidecars** — `services/hardware_adapter/`: C++ UDS daemon (systemd-sandboxed) for SDK-side bridges; `services/sync-go/`: Go replay classifier (commutative sales vs quarantine) for the recovery gate's replay step. Both are stateless; the Python edge is the single owner of local state, policy and audit. See `services/README.md`
 - HTML dashboard UI served by FastAPI (includes a live Three Planes panel)
 - PostgreSQL + Redis + Kafka + Prometheus + Grafana Docker stack
