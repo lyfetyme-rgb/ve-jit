@@ -34,6 +34,9 @@ jobs:
       - name: Validate skill schemas and database isolation
         working-directory: ${{ github.workspace }}
         run: python tools/validate_skills.py
+      - name: Scan for committed secrets
+        working-directory: ${{ github.workspace }}
+        run: python tools/scan_secrets.py
 
   typescript:
     runs-on: ubuntu-24.04

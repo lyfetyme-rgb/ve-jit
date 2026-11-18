@@ -2,6 +2,20 @@
 
 Report vulnerabilities privately to: security@vejit.com
 
+## Signing keys are never shared
+- Production signing keys (`POLICY_SIGNING_KEY` seeds, `CLOUD_SIGNER_TOKEN`, `CLOUD_SYNC_TOKEN`, service tokens)
+  must **never** be committed, printed, pasted into chat, or issued to contractors.
+- Contractors and CI only ever use **local ephemeral test keys generated at test runtime**
+  (see `backend/tests/test_policy_bundles.py` — `Ed25519PrivateKey.generate()` at import time, per run).
+- The repository is scanned on every push: `python tools/scan_secrets.py` fails the build on
+  PEM blocks, non-placeholder assignments to sensitive names, or credentialed database URLs.
+  Run it before committing if you touch anything auth-adjacent.
+- Key ceremony for production: offline generation (`tools/gen_policy_bundle_key.py`),
+  two-person handoff into the secret manager (never git), rotation via staged ->
+  active -> retired trust-ring cutover (`docs/EDGE_ARCHITECTURE.md`).
+- `CLOUD_SIGNER_TOKEN` and `CLOUD_SYNC_URL` live only in `/etc/vendarix/edge.env` (mode 0640,
+  `vendarix-edge` group) and in the cloud-side signer's secret store; they are never in source control.
+
 ## PCI-DSS — out of scope by design
 - VE-JIT ingests non-PCI SKU/inventory/lane telemetry only. Any request carrying
   cardholder data (PAN, track data, CVV, expiry, card-named fields) is rejected
