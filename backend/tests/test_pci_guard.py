@@ -115,6 +115,15 @@ def test_clean_inventory_telemetry_is_accepted():
     assert resp.status_code == 200
 
 
+def test_hex_ids_do_not_false_positive_as_pan():
+    # A long hex id can contain a Luhn-valid 13-19 digit substring; that is an
+    # identifier, not a card number, and must not be rejected (CI flake root cause).
+    for _ in range(500):
+        assert not contains_cardholder_data({"correlation_id": uuid.uuid4().hex})
+        assert not contains_cardholder_data({"event_id": "evt_" + uuid.uuid4().hex})
+    assert contains_cardholder_data({"note": "card 4111111111111111 scanned"})
+
+
 def test_redact_scrubs_pan_class_material():
     masked = redact(f"order PAN {PAN} and ok 123456")
     assert PAN not in masked

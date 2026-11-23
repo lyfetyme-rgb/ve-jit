@@ -118,7 +118,7 @@ def test_chain_tip_mismatch_rejects_batch():
     seed_inventory(sku, 50)
     events = [pos_event(sku, 1, i + 1) for i in range(2)]
     resp = cloud_ingest(events, chain_tip="0" * 64)
-    assert resp.status_code == 409
+    assert resp.status_code == 409, resp.text
     assert "chain tip" in resp.json()["detail"]
     inv = [r for r in client.get("/api/v1/cloud/inventory?sku=" + sku).json()["inventory"]][0]
     assert inv["quantity"] == 50
@@ -162,7 +162,7 @@ def test_explicit_quarantine_verdict_then_apply_decrements_cloud_inventory():
     seed_inventory(sku, 100)
     event = pos_event(sku, 2, 31)
     resp = cloud_ingest([event], verdicts=[{"event_id": event["event_id"], "action": "quarantine", "reason": "review restock first"}])
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json()["quarantined"] >= 1
     assert client.get("/api/v1/cloud/inventory?sku=" + sku).json()["inventory"][0]["quantity"] == 100
 

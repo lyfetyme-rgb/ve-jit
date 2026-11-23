@@ -34,7 +34,7 @@ from typing import Any
 from fastapi import HTTPException, Request
 from json import JSONDecodeError
 
-PAN_DIGIT_RUN = re.compile(r"(?<!\d)(\d[\d\s\-]{10,19}\d)(?!\d)")
+PAN_DIGIT_RUN = re.compile(r"(?<![0-9A-Za-z])(\d[\d\s\-]{10,19}\d)(?![0-9A-Za-z])")
 TRACK_DATA = re.compile(r"%B[0-9]{13,19}\^|;[0-9]{13,19}=|\?\d?[0-9]{2,}")
 KEY_NAMES = re.compile(
     r"(?i)(pan|card[_\s\-]?(?:number|no|num)|cardnumber|cc[_\s\-]?number|primary[_\s\-]?account(_number)?|"
@@ -72,8 +72,11 @@ def luhn_ok(number: str) -> bool:
 
 
 def _contains_pan_in_text(text: str) -> bool:
+    # Track data is unambiguous cardholder data wherever it appears.
     if TRACK_DATA.search(text):
         return True
+    # Reject a digit run only when it is not embedded in a longer alphanumeric
+    # token (IDs, hashes, correlation ids are hex and can contain Luhn-like runs).
     for match in PAN_DIGIT_RUN.finditer(text):
         if luhn_ok(_digits(match.group(1))):
             return True
