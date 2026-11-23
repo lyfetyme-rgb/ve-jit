@@ -70,6 +70,18 @@ document.getElementById("edgeBtn").addEventListener("click", loadEdge);
 document.getElementById("recsBtn").addEventListener("click", loadRecommendations);
 document.getElementById("anomaliesBtn").addEventListener("click", loadAnomalies);
 loadPci().catch(console.error);
+loadBengal().catch(console.error);
+
+async function loadBengal() {
+  const data = await fetchJson("/api/v1/assurance/bengal/status");
+  const el = document.getElementById("bengalOutput");
+  if (!el) return;
+  el.innerHTML = `
+    <div class="pci-row"><span>Analysis method</span><b>${data.method_version}</b></div>
+    <div class="pci-row"><span>Threat modes</span><b>${data.modes.length} (${data.modes.join(", ")})</b></div>
+    <div class="pci-row"><span>T&amp;E protocol</span><b>${data.protocol_version}</b></div>
+    <div class="plane-rule">Observation only. BENGAL analyses do not approve, deny or execute governed actions.</div>`;
+}
 
 async function loadPci() {
   const data = await fetchJson("/api/v1/compliance/pci-scope");
