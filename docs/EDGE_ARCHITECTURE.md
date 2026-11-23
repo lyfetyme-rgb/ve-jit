@@ -108,6 +108,7 @@ exactly what moves):
 | Operational database | `inventory_items`, `purchase_orders`, `transfer_orders`, … (three planes) | Mutable current projections with a `version` column and compare-and-swap writes |
 | Policy database | `edge_policy_rules` — named, versioned, activated/deactivated rules | See the hard safety gates below — the gate fails closed when no active rule exists or the bundle is stale |
 | Intelligence database | `recommendations` — forecasts, recommendations, model outputs | Recommendations are never operational truth |
+| Assurance | `app/assurance/` (BENGAL BAA) — observation-only analyzers | Reports are fingerprint/count artifacts only; no DB write, no authorization |
 | Continuity database | `edge_continuity_records` (append-only), `edge_continuity_scores`, `edge_checkpoints`, `edge_recovery_sessions` | `edge_continuity_records` is INSERT-only |
 | Cloud reconciliation database | `cloud_store_watermarks`, `cloud_ingested_events`, `cloud_reconciliation_quarantine`, `cloud_inventory` | Dedup ledger enforces idempotency at the DB level; CAS on `cloud_inventory.version` |
 | Audit ledger | `recommendations` lifecycle + `inventory_ledger` + `edge_events.auth_metadata` + `audit_logs/audit.log` | `inventory_ledger` is INSERT-only |

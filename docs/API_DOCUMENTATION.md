@@ -23,6 +23,11 @@
 - `GET /api/v1/jit/demo`
 - `POST /api/v1/jit/emit-demo-event`
 
+## Assurance
+- `GET /api/v1/assurance/bengal/status` — static capability metadata (method/protocol version, modes, observation-only)
+- `POST /api/v1/assurance/bengal/analyze` — redacted threat-mode assessment summary
+- `POST /api/v1/assurance/bengal/eval` — fixed-corpus T&E metrics (confusion counts, F1, AUC, Wilson bounds); optional `min_f1`
+
 ## Three planes
 Full contracts and examples: `docs/THREE_PLANES.md`.
 Planes: `docs/THREE_PLANES.md`. Edge: `docs/EDGE_ARCHITECTURE.md`.

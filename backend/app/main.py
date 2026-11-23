@@ -33,6 +33,7 @@ from app.api.operations import router as operations_router
 from app.api.intelligence import router as intelligence_router
 from app.api.edge import router as edge_router
 from app.api.cloud import router as cloud_router
+from app.api.assurance import router as assurance_router
 from app.cloud.replay_router import router as cloud_replay_router
 from app.middleware.audit import AuditLogMiddleware
 from app.core.queue_management_ai import QueueDataProvider, QueueManagementAI, QueueMetrics, QueueMonitor
@@ -133,6 +134,7 @@ app.include_router(intelligence_router)
 app.include_router(edge_router)
 app.include_router(cloud_router)
 app.include_router(cloud_replay_router)
+app.include_router(assurance_router)
 
 frontend_candidates = [
     Path(__file__).resolve().parents[2] / "frontend",  # repo layout: backend/app/main.py -> repo root
