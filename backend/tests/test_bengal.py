@@ -66,13 +66,29 @@ def test_analyze_returns_summary_only_and_is_observation_only():
 
 
 def test_bengal_never_mutates_operational_state():
-    before = client.get("/api/v1/inventory").json()
+    # Structural invariant: no assurance route depends on get_db, so it cannot
+    # read or write commerce/operations tables regardless of test DB state.
+    from app.api.assurance import router as assurance_router
+    from app.db.database import get_db
+
+    affected = [r for r in assurance_router.routes if "/bengal" in getattr(r, "path", "")]
+    assert affected, "assurance routes not mounted"
+    for route in affected:
+        call = getattr(route, "dependant", None)
+        assert call is not None
+        for sub in _flatten_dependencies(call):
+            fn = sub.call
+            assert getattr(fn, "__name__", "") != "get_db", f"{route.path} must not depend on get_db"
     client.post(
         "/api/v1/assurance/bengal/analyze",
         json={"case": {"case_id": "case-api-2", "text": "Neutral observation about a sandbox scan."}, "modes": ["bias"]},
     )
-    after = client.get("/api/v1/inventory").json()
-    assert before == after
+
+
+def _flatten_dependencies(dependant):
+    yield dependant
+    for sub in getattr(dependant, "dependencies", []):
+        yield from _flatten_dependencies(sub)
 
 
 def test_health_exposes_static_capability_metadata():
