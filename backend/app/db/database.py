@@ -32,6 +32,12 @@ def ensure_version_columns() -> None:
             except Exception:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN version INTEGER NOT NULL DEFAULT 1"))
 
+        # Priority lane added to the Atlassian outbox after the first release.
+        try:
+            conn.execute(text("SELECT priority FROM int_atlassian_outbox LIMIT 0"))
+        except Exception:
+            conn.execute(text("ALTER TABLE int_atlassian_outbox ADD COLUMN priority INTEGER NOT NULL DEFAULT 3"))
+
 
 def get_db():
     db = SessionLocal()

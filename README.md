@@ -21,6 +21,7 @@ queue management, procurement automation, and supply-chain visibility.
 - **Cloud recovery ingestion** — hash-chain continuity vs per-store watermark tip, idempotent dedup ledger,
   quarantine-first HITL reconciliation (`POST /api/v1/cloud/recovery/sessions`), payload-CAS apply
 - **Compliance posture** — declared PCI-DSS out-of-scope boundary: non-PCI SKU/inventory telemetry only, HTTP 422 enforcement at the API edge (Luhn detector + card-named fields), redacting audit middleware, `GET /api/v1/compliance/pci-scope` machine-readable posture. See `docs/PCI_SCOPE.md`
+- **Atlassian automation** — three loops: Jira-approved change gate + Confluence release audit, store self-healing JSM incidents with storm dedupe, central-only rate-limited outbox (edge never calls Atlassian). See `docs/ATLASSIAN_LOOPS.md`
 - **BENGAL BAA assurance** — independent, observation-only threat-mode analyzer (bias, hallucination, safe information flow, poisoned sources) with a fixed 16-case T&E corpus; redacted reports only, no authorization/execution path. See `docs/BENGAL_BAA.md`
 - **Release manifests** — `releases/<tag>/manifest.json` attaches to every GitHub Release automatically: the SKU → release mapping with per-file SHA256 for both platform bundles (see `releases/README.md`)
 - **Migrations** — `infrastructure/migrations/` forward-only numbered SQL migrations (0000 baseline, 0001 append-only triggers, 0002 cloud reconciliation) with an idempotent dependency-free runner (`--status`, `--baseline`, `--db`)

@@ -70,6 +70,24 @@ class Settings(BaseSettings):
     PROMETHEUS_ENABLED: bool = True
     PROMETHEUS_PORT: int = 9090
 
+    # Atlassian integration (CENTRAL BACKEND ONLY — never on edge nodes).
+    # Credentials are read from files, never from the repository or edge config.
+    ATLASSIAN_ENABLED: bool = False
+    ATLASSIAN_SITE_URL: str = ""          # https://example.atlassian.net
+    ATLASSIAN_CLOUD_ID: str = ""
+    ATLASSIAN_EMAIL: str = ""
+    ATLASSIAN_API_TOKEN_FILE: str = ""    # path to a secret file with the API token
+    ATLASSIAN_WEBHOOK_SECRET_FILE: str = ""  # path to Jira webhook HMAC secret
+    JIRA_PROJECT_KEY: str = "KAN"          # change-request project
+    JSM_SERVICE_DESK_ID: str = ""          # JSM service desk for store incidents
+    CONFLUENCE_SPACE_KEY: str = "SD"
+    CONFLUENCE_ROOT_PAGE_ID: str = ""      # parent for runbooks/release pages
+    ATLASSIAN_RATE_LIMIT_PER_MIN: int = 60  # central backend cap (GitHub Actions + stores share it)
+    ATLASSIAN_BURST: int = 10
+    ATLASSIAN_MAX_RETRIES: int = 4
+    ATLASSIAN_STORM_WINDOW_SECONDS: int = 300
+    ATLASSIAN_STORM_KEY_PREFIX: str = "vejit-store-health"
+
     SECRET_KEY: str = "change-me-in-production-use-long-random-string"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
