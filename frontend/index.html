@@ -41,6 +41,11 @@
       <div id="planesOutput" class="planes-grid">Loading...</div>
     </section>
 
+    <section class="card span-2" id="atlassianBanner" style="display:none">
+      <div class="pci-badge bad">ATLASSIAN MAPPING DRIFT — <span id="dlqCount">0</span> item(s) in dead-letter queue</div>
+      <div class="plane-rule">A Jira project or JSM custom field change caused permanent 4xx errors. Payloads are retained in <code>/api/v1/integrations/outbox/dlq</code>; fix the mapping then requeue via <code>POST /api/v1/integrations/outbox/dlq/{id}/retry</code>.</div>
+    </section>
+
     <section class="card span-2">
       <h2>BENGAL BAA — Independent Assurance</h2>
       <div id="bengalOutput" class="bengal-grid">Loading...</div>

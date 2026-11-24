@@ -77,7 +77,7 @@ pre {
 }
 .pci-grid { display: grid; gap: 10px; margin-top: 10px; }
 .pci-badge { font-weight: 800; padding: 12px 18px; border-radius: 10px; font-size: 15px; letter-spacing: 0.5px; text-align: center; }
-.pci-badge.ok { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
+.pci-badge.bad { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
 .pci-row { display: grid; grid-template-columns: auto 1fr; gap: 14px; background: #0b1220; border: 1px solid #334155; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 .pci-row span { color: #94a3b8; font-weight: 700; min-width: 90px; }
 .edge-grid { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; margin-top: 10px; }

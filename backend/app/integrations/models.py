@@ -61,7 +61,12 @@ class EdgeIncident(Base):
 
 
 class AtlassianOutbox(Base):
-    """Durable, deduplicated, rate-limited delivery queue."""
+    """Durable, deduplicated, rate-limited delivery queue with priority lanes.
+
+    priority: P1 (critical incidents) -> P3 (info/telemetry) -> P4 (Confluence sync).
+    Drain order is (priority ASC, id ASC) so a backlog of P3/P4 work can never
+    starve a P1 grocery cold-chain or QSR POS-down alert.
+    """
 
     __tablename__ = "int_atlassian_outbox"
 
@@ -69,7 +74,8 @@ class AtlassianOutbox(Base):
     idempotency_key = Column(String(200), unique=True, nullable=False, index=True)
     operation = Column(String(64), nullable=False)  # jsm.create_incident | jsm.resolve | confluence.publish | jira.comment
     payload = Column(Text, nullable=False)
-    status = Column(String(32), nullable=False, default="PENDING", index=True)
+    priority = Column(Integer, nullable=False, default=3, index=True)  # 1=P1 critical .. 4=P4 housekeeping
+    status = Column(String(32), nullable=False, default="PENDING", index=True)  # PENDING|DELIVERED|FAILED|FAILED_DLQ
     attempts = Column(Integer, nullable=False, default=0)
     last_error = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

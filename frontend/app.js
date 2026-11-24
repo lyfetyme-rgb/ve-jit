@@ -71,6 +71,20 @@ document.getElementById("recsBtn").addEventListener("click", loadRecommendations
 document.getElementById("anomaliesBtn").addEventListener("click", loadAnomalies);
 loadPci().catch(console.error);
 loadBengal().catch(console.error);
+loadDlqBanner().catch(console.error);
+
+async function loadDlqBanner() {
+  try {
+    const data = await fetchJson("/api/v1/integrations/outbox/status");
+    const banner = document.getElementById("atlassianBanner");
+    if (!banner) return;
+    const count = data.failed_dlq || 0;
+    document.getElementById("dlqCount").textContent = String(count);
+    banner.style.display = count > 0 ? "block" : "none";
+  } catch (e) {
+    // Status unavailable: do not create a false alarm.
+  }
+}
 
 async function loadBengal() {
   const data = await fetchJson("/api/v1/assurance/bengal/status");
