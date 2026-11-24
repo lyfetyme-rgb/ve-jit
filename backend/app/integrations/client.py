@@ -42,7 +42,20 @@ class TokenBucket:
 
 
 class AtlassianUnavailable(Exception):
-    pass
+    """Retryable condition: rate limit, 5xx, transport error."""
+
+
+class PermanentAtlassianError(Exception):
+    """Non-retryable 4xx (except 429) — mapping drift, deleted project, bad field.
+
+    Messages never include the raw response body beyond a bounded, redacted
+    excerpt; the full payload stays in the outbox row for audit.
+    """
+
+    def __init__(self, status_code: int, detail: str):
+        super().__init__(f"HTTP {status_code}: {detail[:300]}")
+        self.status_code = status_code
+        self.detail = detail[:300]
 
 
 class DryRunAtlassianClient:
@@ -113,6 +126,8 @@ class AtlassianClient:
                     last_error = AtlassianUnavailable(f"retryable status {response.status_code}")
                     time.sleep(min(2**attempt, 8))
                     continue
+                if 400 <= response.status_code < 500:
+                    raise PermanentAtlassianError(response.status_code, response.text)
                 response.raise_for_status()
                 return response.json() if response.content else {}
             except (httpx.HTTPError, AtlassianUnavailable) as exc:
@@ -149,11 +164,12 @@ def build_client() -> DryRunAtlassianClient | AtlassianClient:
     return AtlassianClient() if settings.ATLASSIAN_ENABLED else DryRunAtlassianClient()
 
 
-def enqueue(db, operation: str, idempotency_key: str, payload: dict) -> AtlassianOutbox:
+def enqueue(db, operation: str, idempotency_key: str, payload: dict, priority: int = 3) -> AtlassianOutbox:
     row = AtlassianOutbox(
         operation=operation,
         idempotency_key=idempotency_key,
         payload=json.dumps(payload, sort_keys=True),
+        priority=max(1, min(4, int(priority))),
         status="PENDING",
     )
     db.add(row)

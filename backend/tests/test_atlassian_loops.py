@@ -135,6 +135,102 @@ def test_outbox_drains_deduped_operations():
     assert result.json()["dry_run"] is True
     after = client.get("/api/v1/integrations/outbox/status").json()
     assert after["pending"] == 0
+    assert "failed_dlq" in after
+    assert after["priority_lanes"] == [1, 3, 4]
+
+
+def _enqueue(db_session, operation: str, key: str, payload: dict, priority: int):
+    from app.integrations.client import enqueue
+
+    row = enqueue(db_session, operation, key, payload, priority=priority)
+    db_session.commit()
+    return row.id
+
+
+def test_priority_lanes_drain_p1_before_p3_p4():
+    from app.integrations.client import enqueue
+
+    db = S()
+    try:
+        # P4 Confluence page update first in insertion order, then P3 info, then P1 critical.
+        enqueue(db, "confluence.publish", "prio-p4", {"title": "t", "body": "b"}, priority=4)
+        enqueue(db, "jira.comment", "prio-p3", {"issue": "X", "body": "info"}, priority=3)
+        enqueue(db, "jsm.create_incident", "prio-p1", {"description": "cold-chain failure"}, priority=1)
+        db.commit()
+    finally:
+        db.close()
+
+    result = client.post("/api/v1/integrations/outbox/drain", json={"max_batch": 3}).json()
+    order = result["processed_order"]
+    assert len(order) == 3
+    assert order[0].startswith("P1:"), order
+    assert order[1].startswith("P3:"), order
+    assert order[2].startswith("P4:"), order
+
+
+def test_permanent_4xx_goes_to_dlq_with_payload_retained():
+    from app.integrations.client import PermanentAtlassianError
+    from app.integrations.models import AtlassianOutbox
+
+    db = S()
+    try:
+        row = AtlassianOutbox(
+            idempotency_key="dlq-test-1", operation="jira.comment",
+            payload=json.dumps({"issue": "KAN-GONE", "body": "audit"}),
+            priority=3, status="PENDING",
+        )
+        db.add(row)
+        db.commit()
+        dlq_id = row.id
+    finally:
+        db.close()
+
+    class FakeClient:
+        def jira_comment(self, issue, body):
+            raise PermanentAtlassianError(400, "project deleted")
+
+    # Inject a failing client through app state is not needed: call the drain
+    # with an injected dependency-free wrapper via monkeypatch on build_client.
+    import app.integrations.outbox_router as outbox_module
+
+    original = outbox_module.build_client
+    outbox_module.build_client = lambda: FakeClient()
+    try:
+        result = client.post("/api/v1/integrations/outbox/drain", json={"max_batch": 50}).json()
+        assert result["failed_dlq"] >= 1
+    finally:
+        outbox_module.build_client = original
+
+    db = S()
+    try:
+        row = db.query(AtlassianOutbox).filter(AtlassianOutbox.id == dlq_id).first()
+        assert row.status == "FAILED_DLQ"
+        assert "400" in row.last_error
+        assert json.loads(row.payload)["issue"] == "KAN-GONE"  # audit data retained
+    finally:
+        db.close()
+
+    listing = client.get("/api/v1/integrations/outbox/dlq").json()["items"]
+    assert any(item["idempotency_key"] == "dlq-test-1" for item in listing)
+    requeue = client.post(f"/api/v1/integrations/outbox/dlq/{dlq_id}/retry",
+                          json={"actor": "admin-1", "note": "restored project"})
+    assert requeue.status_code == 200
+    assert requeue.json()["status"] == "PENDING"
+
+
+def test_critical_reason_assigns_p1_priority():
+    base = {"tenant_id": "tenant_001", "store_id": "store-p1", "architecture": "amd64", "version": "0.3.0"}
+    client.post("/api/v1/integrations/edge/health", json={
+        **base, "healthy": False, "reason": "QSR POS DOWN - register lane offline"
+    })
+    db = S()
+    try:
+        from app.integrations.models import AtlassianOutbox
+
+        rows = db.query(AtlassianOutbox).filter(AtlassianOutbox.idempotency_key.like("open:tenant_001:store-p1:%")).all()
+        assert rows and rows[-1].priority == 1
+    finally:
+        db.close()
 
 
 def test_edge_modules_never_import_atlassian():

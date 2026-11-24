@@ -23,6 +23,14 @@ router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
 
 ARCHITECTURES = ("amd64", "arm64")
 
+# A P1 store alert must not queue behind telemetry or page syncs.
+_CRITICAL_MARKERS = ("cold-chain", "cold chain", "pos down", "p1", "critical", "outage", "payment down")
+
+
+def _priority(reason: str) -> int:
+    lowered = (reason or "").lower()
+    return 1 if any(marker in lowered for marker in _CRITICAL_MARKERS) else 3
+
 
 class EdgeHealthIn(BaseModel):
     tenant_id: str = Field(..., min_length=1)
@@ -55,7 +63,7 @@ def edge_health(body: EdgeHealthIn, db: Session = Depends(get_db)):
             "status": "Resolved",
             "body": f"VE-JIT store {body.store_id} ({body.architecture}) recovered after rollback. "
                     f"Root-cause logs digest: {body.root_cause_log_hash}. Reason: {body.reason}",
-        })
+        }, priority=_priority(body.reason))
         db.commit()
         return {"ok": True, "changed": True, "status": "RESOLVED", "incident_key": incident_key, "jsm_issue": row.jsm_issue_key}
 
@@ -70,7 +78,7 @@ def edge_health(body: EdgeHealthIn, db: Session = Depends(get_db)):
         "description": f"tenant={body.tenant_id}; store={body.store_id}; arch={body.architecture}; "
                        f"version={body.version}; runbook={runbook}; reason={body.reason}",
     }
-    enqueue(db, "jsm.create_incident", f"open:{incident_key}", payload)
+    enqueue(db, "jsm.create_incident", f"open:{incident_key}", payload, priority=_priority(body.reason))
     row = EdgeIncident(
         incident_key=incident_key,
         tenant_id=body.tenant_id,

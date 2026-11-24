@@ -39,8 +39,12 @@ stores ──health──▶ ve-jit central ──outbox + token bucket──▶
 - `TokenBucket(rate_per_min=ATLASSIAN_RATE_LIMIT_PER_MIN, burst=ATLASSIAN_BURST)` gates
   every outbound call; a 429/5xx triggers bounded exponential retry.
 - `int_atlassian_outbox` gives at-least-once delivery with unique
-  `idempotency_key`, `PENDING → DELIVERED/FAILED`, and an operator endpoint
-  `POST /api/v1/integrations/outbox/drain`.
+  `idempotency_key`, `PENDING → DELIVERED/FAILED/FAILED_DLQ`. Drain order is
+  **priority lanes**: P1 critical incidents first, then P3 info/telemetry, then
+  P4 Confluence page updates — a 2,000-item telemetry backlog cannot starve a
+  P1 cold-chain/POS-down alert. Permanent 4xx (except 429) go to `FAILED_DLQ`
+  with the full payload retained; the dashboard shows a mapping-drift banner
+  and an admin can requeue after fixing the Jira/JSM mapping.
 - With `ATLASSIAN_ENABLED=false` the `DryRunAtlassianClient` records operations
   locally: all tests and local dev run without network or credentials.
 
