@@ -1,5 +1,13 @@
+// Same-origin by default (local FastAPI /ui). On Vercel or any static host,
+// config.js sets window.VEJIT_API_BASE to the central ve-jit backend origin.
+function apiUrl(path) {
+  const base = String(window.VEJIT_API_BASE || "").replace(/\/+$/, "");
+  if (!base || /^https?:\/\//i.test(path)) return path;
+  return base + (String(path).startsWith("/") ? path : "/" + path);
+}
+
 async function fetchJson(url, options) {
-  const response = await fetch(url, options);
+  const response = await fetch(apiUrl(url), options);
   const data = await response.json();
   if (!response.ok) throw new Error(JSON.stringify(data));
   return data;
