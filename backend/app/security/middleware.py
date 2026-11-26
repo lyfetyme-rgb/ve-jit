@@ -51,14 +51,56 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class RedisRateLimitStore:
+    """Shared fixed-window counters for multi-replica deployments."""
+
+    def __init__(self, url: str):
+        self.url = url
+        self._client = None
+
+    async def _redis(self):
+        if self._client is None:
+            import redis.asyncio as aioredis  # optional production dependency
+
+            self._client = aioredis.from_url(self.url)
+        return self._client
+
+    async def allow(self, key: str, limit: int, burst: int) -> tuple[bool, int]:
+        try:
+            client = await self._redis()
+            minute_key = f"vejit:rl:{key}:60"
+            burst_key = f"vejit:rl:{key}:10"
+            pipe = client.pipeline()
+            pipe.incr(minute_key)
+            pipe.expire(minute_key, 60, nx=True)
+            pipe.incr(burst_key)
+            pipe.expire(burst_key, 10, nx=True)
+            minute_count, _, burst_count, _ = await pipe.execute()
+            if minute_count > limit or burst_count > burst:
+                return False, 60
+            return True, 0
+        except Exception:
+            # Fail open on limiter outage but never break the request path.
+            return True, 0
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Sliding-window limiter keyed by authenticated subject (or client IP)."""
+    """Sliding-window limiter keyed by authenticated subject (or client IP).
+
+    Uses Redis when RATE_LIMIT_BACKEND=redis so limits are shared across
+    replicas; otherwise uses an in-process store (development only).
+    """
 
     def __init__(self, app, *args, **kwargs):
         super().__init__(app, *args, **kwargs)
         self._hits: dict[str, deque[float]] = defaultdict(deque)
         self._lock = threading.Lock()
         self._requests = 0
+        self._store = (
+            RedisRateLimitStore(settings.REDIS_URL)
+            if settings.RATE_LIMIT_BACKEND.strip().lower() == "redis"
+            else None
+        )
 
     @staticmethod
     def _client_key(request: Request) -> str:
@@ -89,6 +131,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         key = prefix + self._client_key(request)
         limit = self._limit(request)
         burst = max(1, settings.RATE_LIMIT_BURST)
+
+        if self._store is not None:
+            allowed, retry_after = await self._store.allow(key, limit, burst)
+            if not allowed:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded"},
+                    headers={"Retry-After": str(retry_after)},
+                )
+            return await call_next(request)
 
         with self._lock:
             bucket = self._hits[key]

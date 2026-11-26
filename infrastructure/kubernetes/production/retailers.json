@@ -1,0 +1,71 @@
+{
+  "_comment": "Generic retailer archetypes for local demo and testing. No real company names. Copy this file, rename the tenants, and point RETAILER_CONFIG at your copy to load your own companies.",
+  "retailers": [
+    {
+      "tenant_id": "grocery_demo",
+      "name": "Demo Grocery Co",
+      "vertical": "grocery",
+      "description": "Grocery / cold-chain archetype. Represents any supermarket chain.",
+      "sku_prefix": "GR-",
+      "stores": [
+        {
+          "store_id": "GR-VA-042",
+          "name": "Demo Grocery - Richmond",
+          "location": "Richmond, VA",
+          "architecture": "amd64",
+          "channel": "store"
+        }
+      ],
+      "catalog": [
+        { "sku": "GR-MILK-1G", "name": "Whole Milk 1 Gallon", "price": 3.79, "quantity": 48, "reorder_point": 12 },
+        { "sku": "GR-EGGS-12", "name": "Large Eggs 12 ct", "price": 3.29, "quantity": 36, "reorder_point": 12 },
+        { "sku": "GR-BREAD-WH", "name": "White Bread 20 oz", "price": 2.49, "quantity": 60, "reorder_point": 18 },
+        { "sku": "GR-CHICK-BR", "name": "Chicken Breast lb", "price": 6.99, "quantity": 22, "reorder_point": 8 }
+      ]
+    },
+    {
+      "tenant_id": "hardware_demo",
+      "name": "Demo Hardware Co-op",
+      "vertical": "hardware",
+      "description": "Hardware co-op archetype. Represents any independent hardware retailer.",
+      "sku_prefix": "HW-",
+      "stores": [
+        {
+          "store_id": "HW-NC-001",
+          "name": "Demo Hardware - Raleigh",
+          "location": "Raleigh, NC",
+          "architecture": "arm64",
+          "channel": "store"
+        }
+      ],
+      "catalog": [
+        { "sku": "HW-PAINT-GAL", "name": "Interior Paint Gallon", "price": 38.99, "quantity": 24, "reorder_point": 6 },
+        { "sku": "HW-DRILL-20V", "name": "20V Cordless Drill Kit", "price": 129.0, "quantity": 14, "reorder_point": 4 },
+        { "sku": "HW-SCREWS-100", "name": "Deck Screws 100 ct", "price": 12.49, "quantity": 40, "reorder_point": 10 },
+        { "sku": "HW-BRUSH-9", "name": "9-inch Paint Roller Kit", "price": 9.99, "quantity": 28, "reorder_point": 8 }
+      ]
+    },
+    {
+      "tenant_id": "home_improvement_demo",
+      "name": "Demo Home Improvement Co",
+      "vertical": "home_improvement",
+      "description": "Home improvement / distribution archetype. Represents any big-box or DC operation.",
+      "sku_prefix": "HI-",
+      "stores": [
+        {
+          "store_id": "HI-NC-DC1",
+          "name": "Demo Home Improvement - Charlotte DC",
+          "location": "Charlotte, NC",
+          "architecture": "amd64",
+          "channel": "store"
+        }
+      ],
+      "catalog": [
+        { "sku": "HI-LUMBER-2X4", "name": "2x4x8 Stud Lumber", "price": 4.28, "quantity": 220, "reorder_point": 60 },
+        { "sku": "HI-FASTENER-50", "name": "Construction Fasteners 50 lb", "price": 32.5, "quantity": 30, "reorder_point": 8 },
+        { "sku": "HI-PAINT-5G", "name": "Exterior Paint 5 Gallon", "price": 148.0, "quantity": 18, "reorder_point": 4 },
+        { "sku": "HI-APPL-DW", "name": "Dishwasher Stainless", "price": 549.0, "quantity": 9, "reorder_point": 3 }
+      ]
+    }
+  ]
+}

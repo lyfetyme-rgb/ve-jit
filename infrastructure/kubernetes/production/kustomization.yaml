@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: vejit-platform
+
+resources:
+  - ../base/namespace.yaml
+  - ../base/backend-service.yaml
+  - ../workers/queue-worker-deployment.yaml
+  - ../workers/network-worker-deployment.yaml
+  - ../base/redis-deployment.yaml
+  - ../base/redis-service.yaml
+  - ../base/zookeeper-deployment.yaml
+  - ../base/zookeeper-service.yaml
+  - ../base/kafka-deployment.yaml
+  - ../base/kafka-service.yaml
+  - ../monitoring/prometheus-deployment.yaml
+  - ../monitoring/prometheus-service.yaml
+  - ../monitoring/grafana-deployment.yaml
+  - ../monitoring/grafana-service.yaml
+  - configmap.yaml
+
+# The real vejit-secrets Secret is created from your vault and intentionally
+# excluded. secret-template.yaml documents the required keys.
+
+configMapGenerator:
+  - name: vejit-retailers
+    files:
+      - retailers.json
+
+patches:
+  - path: backend-patch.yaml
+
+images:
+  - name: vejit-backend
+    newTag: 4.1.0
