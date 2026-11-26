@@ -133,7 +133,7 @@ def test_no_credentials_hardcoded_in_source():
 
 
 @pytest.mark.no_auth_override
-def test_tenant_scope_comes_from_token_not_query(monkeypatch):
+def test_tenant_scope_comes_from_token_not_query(seeded_db):
     token = _token(subject="ace-user", tenants=["acehardware"], stores=["ACE-NC-001"])
     denied = client.get(
         f"{CONSOLE}/overview?tenant_id=foodlion&store_id=FL-VA-042", headers=_bearer(token)
@@ -182,7 +182,7 @@ def test_actor_is_bound_to_token(seeded_db):
 
 
 @pytest.mark.no_auth_override
-def test_rate_limit_returns_429(monkeypatch):
+def test_rate_limit_returns_429(seeded_db, monkeypatch):
     monkeypatch.setattr(settings, "RATE_LIMIT_PER_MINUTE", 3)
     monkeypatch.setattr(settings, "RATE_LIMIT_BURST", 3)
     token = _token(subject="rate-test-user")
