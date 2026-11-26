@@ -32,6 +32,16 @@ def ensure_version_columns() -> None:
             except Exception:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN version INTEGER NOT NULL DEFAULT 1"))
 
+        # Multi-tenant scoping added for the Store Console; nullable for older rows.
+        for column, ddl in (
+            ("tenant_id", "tenant_id TEXT"),
+            ("store_id", "store_id TEXT"),
+        ):
+            try:
+                conn.execute(text(f"SELECT {column} FROM recommendations LIMIT 0"))
+            except Exception:
+                conn.execute(text(f"ALTER TABLE recommendations ADD COLUMN {ddl}"))
+
         # Priority lane added to the Atlassian outbox after the first release.
         try:
             conn.execute(text("SELECT priority FROM int_atlassian_outbox LIMIT 0"))

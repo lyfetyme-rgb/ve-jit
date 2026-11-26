@@ -13,6 +13,7 @@ from starlette.responses import RedirectResponse
 from app.config import settings
 from app.db.database import Base, engine
 from app.planes import models as plane_models  # noqa: F401  (register plane tables with create_all)
+from app.console import models as console_models  # noqa: F401  (register store console tables)
 from app.edge import models as edge_models  # noqa: F401  (register edge tables with create_all)
 from app.cloud import models as cloud_models  # noqa: F401  (register cloud reconciliation tables)
 from app.edge.integrity import register as register_append_only
@@ -34,6 +35,7 @@ from app.api.intelligence import router as intelligence_router
 from app.api.edge import router as edge_router
 from app.api.cloud import router as cloud_router
 from app.api.assurance import router as assurance_router
+from app.api.console import router as console_router
 from app.integrations import models as integration_models  # noqa: F401
 from app.integrations.release_loop import router as release_loop_router
 from app.integrations.self_healing import router as self_healing_router
@@ -84,6 +86,10 @@ async def lifespan(app: FastAPI):
     with SessionLocal() as seed_db:
         created = seed_default_policies(seed_db)
         logger.info("Edge policy seed: %d default rule(s) created", created)
+        from app.console.seed import seed_demo
+
+        demo = seed_demo(seed_db)
+        logger.info("Store Console demo seed: %s", demo)
 
     ai_engine = QueueManagementAI(
         target_wait_seconds=settings.QUEUE_TARGET_WAIT_SECONDS,
@@ -139,6 +145,7 @@ app.include_router(edge_router)
 app.include_router(cloud_router)
 app.include_router(cloud_replay_router)
 app.include_router(assurance_router)
+app.include_router(console_router)
 app.include_router(release_loop_router)
 app.include_router(self_healing_router)
 app.include_router(outbox_router)
@@ -150,6 +157,9 @@ frontend_candidates = [
 frontend_dir = next((candidate for candidate in frontend_candidates if candidate.exists()), None)
 if frontend_dir is not None:
     app.mount("/ui", StaticFiles(directory=str(frontend_dir), html=True), name="ui")
+    console_dir = frontend_dir / "console"
+    if console_dir.exists():
+        app.mount("/console", StaticFiles(directory=str(console_dir), html=True), name="console")
 
 
 @app.get("/", include_in_schema=False)
