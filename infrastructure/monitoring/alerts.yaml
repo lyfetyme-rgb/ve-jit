@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vejit-alerts
+  namespace: vejit-platform
+spec:
+  groups:
+    - name: vejit-availability
+      rules:
+        - alert: VeJitBackendDown
+          expr: up{job="vejit-backend"} == 0
+          for: 2m
+          labels: { severity: critical }
+          annotations:
+            summary: "VE-JIT backend replica is down"
+            runbook: "docs/RUNBOOK.md#backend-down"
+
+        - alert: VeJitReadinessFailing
+          expr: probe_success{job="vejit-probe"} == 0
+          for: 3m
+          labels: { severity: critical }
+          annotations:
+            summary: "VE-JIT readiness probe failing"
+            runbook: "docs/RUNBOOK.md#backend-down"
+
+        - alert: VeJitHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job=~"vejit-ingress|vejit-backend",status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{job=~"vejit-ingress|vejit-backend"}[5m])) > 0.05
+          for: 5m
+          labels: { severity: warning }
+          annotations:
+            summary: "VE-JIT 5xx rate above 5 percent"
+            runbook: "docs/RUNBOOK.md#high-error-rate"
+
+        - alert: VeJitRateLimitStorm
+          expr: sum(rate(http_requests_total{job="vejit-ingress",status="429"}[5m])) > 20
+          for: 5m
+          labels: { severity: warning }
+          annotations:
+            summary: "Unusual rate-limit rejection volume — investigate abuse or misconfiguration"
+            runbook: "docs/RUNBOOK.md#rate-limit-storm"
+
+        - alert: VeJitAtlassianOutboxBacklog
+          expr: vejit_atlassian_outbox_pending > 100
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Atlassian outbox is backing up; central-only drain may be failing"
+            runbook: "docs/RUNBOOK.md#outbox-backlog"

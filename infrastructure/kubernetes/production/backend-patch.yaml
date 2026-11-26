@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vejit-backend
+  namespace: vejit-platform
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: backend
+          envFrom:
+            - configMapRef:
+                name: vejit-config
+            - secretRef:
+                name: vejit-secrets
+          env:
+            - name: RETAILER_CONFIG
+              value: /etc/vejit/retailers.json
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          volumeMounts:
+            - name: retailer-catalog
+              mountPath: /etc/vejit
+              readOnly: true
+            - name: vault-secrets
+              mountPath: /run/secrets
+              readOnly: true
+      volumes:
+        - name: retailer-catalog
+          configMap:
+            name: vejit-retailers
+        - name: vault-secrets
+          secret:
+            secretName: vejit-secrets
+            # Only *_FILE keys are mounted as files by the projection below;
+            # DATABASE_URL stays an env var from the secret.

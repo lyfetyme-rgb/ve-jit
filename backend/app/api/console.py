@@ -6,6 +6,7 @@ executed by Operations after an explicit human approval.
 """
 
 import json
+import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -24,7 +25,7 @@ from app.planes.governance import (
     approve_recommendation,
     get_recommendation,
 )
-from app.planes.models import CommerceOrder, Recommendation, InventoryLedgerEntry
+from app.planes.models import CommerceOrder, ProductPrice, Recommendation, InventoryLedgerEntry
 from app.security.principal import (
     Principal,
     require_actor,
@@ -54,6 +55,7 @@ class SaleIn(BaseModel):
     lines: list[SaleLine] = Field(..., min_length=1)
     client_order_id: Optional[str] = None
     member_number: Optional[str] = None
+    payment_token: Optional[str] = None  # opaque PSP token, never a PAN
 
 
 def _store(db: Session, tenant_id: str, store_id: str) -> ConsoleStore:
@@ -216,6 +218,29 @@ def sale(
 ):
     require_store(principal, payload.tenant_id, payload.store_id)
     _store(db, payload.tenant_id, payload.store_id)
+
+    # Authorize through the configured boundary before recording the sale.
+    # The PCI guard has already rejected any cardholder data in the body.
+    from app.integrations.payments import PaymentError, current_adapter
+
+    amount = 0.0
+    for line in payload.lines:
+        price = (
+            db.query(ProductPrice)
+            .filter(ProductPrice.sku == line.sku, ProductPrice.store_id == payload.store_id)
+            .first()
+        )
+        if price is not None:
+            amount += float(price.unit_price) * line.quantity
+
+    try:
+        authorization = current_adapter().authorize(
+            reference=payload.payment_token or payload.client_order_id or f"pos-{uuid.uuid4().hex}",
+            amount=round(amount, 2),
+            store_id=payload.store_id,
+        )
+    except PaymentError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     try:
         order, created = place_order(
             db,
@@ -230,7 +255,13 @@ def sale(
     except CommerceError as exc:
         db.rollback()
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
-    return {"order_ref": order.order_ref, "status": order.status, "total": order.total, "created": created}
+    return {
+        "order_ref": order.order_ref,
+        "status": order.status,
+        "total": order.total,
+        "authorization": authorization,
+        "created": created,
+    }
 
 
 @router.get("/audit")

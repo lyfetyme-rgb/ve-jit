@@ -1,5 +1,6 @@
-from typing import List, Union
-from pydantic import field_validator
+import os
+from typing import Any, ClassVar, List, Union
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +27,34 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
+
+    # Secrets may be supplied as a mounted file instead of an environment
+    # variable (Kubernetes secret volume, Docker secret, vault agent sidecar).
+    # Convention: SECRET_KEY_FILE=/run/secrets/secret_key.
+    SECRET_FILE_FIELDS: ClassVar[tuple[str, ...]] = (
+        "SECRET_KEY",
+        "CLOUD_SIGNER_TOKEN",
+        "POLICY_SIGNING_KEY",
+        "CLOUD_SYNC_TOKEN",
+        "LOCAL_USERS_JSON",
+        "OIDC_CLIENT_SECRET",
+        "PAYMENT_PSP_TOKEN",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def load_secret_files(cls, values: Any) -> Any:
+        data = dict(values) if isinstance(values, dict) else {}
+        for name in cls.SECRET_FILE_FIELDS:
+            path = data.get(f"{name}_FILE") or os.environ.get(f"{name}_FILE")
+            if not path:
+                continue
+            try:
+                with open(str(path), encoding="utf-8") as handle:
+                    data[name] = handle.read().strip()
+            except OSError as exc:
+                raise ValueError(f"Cannot read secret file for {name}: {exc}") from exc
+        return data
 
     STORE_ID: str = "store_001"
     STORE_NAME: str = "Demo Store"
@@ -88,6 +117,11 @@ class Settings(BaseSettings):
     ATLASSIAN_STORM_WINDOW_SECONDS: int = 300
     ATLASSIAN_STORM_KEY_PREFIX: str = "vejit-store-health"
 
+    # Payment boundary: 'none' (demo) or 'tokenized' (real PSP, opaque token only).
+    PAYMENT_ADAPTER: str = "none"
+    PAYMENT_PSP_URL: str = ""
+    PAYMENT_PSP_TOKEN: str = ""
+
     # ---------------------------------------------------------------- identity & access (Phase 1)
     # local = signed HS256 tokens issued by /api/v1/auth/login from env-configured users.
     # oidc  = RS256 tokens issued by the corporate IdP and verified against its JWKS.
@@ -100,6 +134,7 @@ class Settings(BaseSettings):
     OIDC_ISSUER: str = ""
     OIDC_AUDIENCE: str = ""
     OIDC_JWKS_URL: str = ""
+    OIDC_CLIENT_SECRET: str = ""
     OIDC_JWKS_CACHE_SECONDS: int = 300
     OIDC_ROLE_CLAIM: str = "role"
     OIDC_TENANT_CLAIM: str = "vejit_tenants"
@@ -109,6 +144,8 @@ class Settings(BaseSettings):
     # (Redis) when running more than one replica.
     RATE_LIMIT_PER_MINUTE: int = 120
     RATE_LIMIT_BURST: int = 20
+    # memory = per-process; redis = shared across replicas (production).
+    RATE_LIMIT_BACKEND: str = "memory"
     CSRF_ENFORCE: bool = True
 
     SECRET_KEY: str = "change-me-in-production-use-long-random-string"
