@@ -6,7 +6,7 @@ is printed to stdout only — store it in your secret manager / environment,
 not in the repository.
 
 Example:
-    python tools/gen_local_user.py alice store_manager foodlion FL-VA-042 \
+    python tools/gen_local_user.py alice store_manager grocery_demo --stores GR-VA-042 \
         | jq -c '[.]'   # -> value for LOCAL_USERS_JSON
 """
 

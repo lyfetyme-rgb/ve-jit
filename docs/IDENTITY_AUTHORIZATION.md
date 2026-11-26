@@ -15,8 +15,8 @@ Set `AUTH_MODE=local`. Users come from `LOCAL_USERS_JSON` — a JSON array of:
     "username": "alice",
     "password_hash": "pbkdf2_sha256$310000$<salt>$<hash>",
     "role": "store_manager",
-    "tenants": ["foodlion"],
-    "stores": ["FL-VA-042"]
+    "tenants": ["grocery_demo"],
+    "stores": ["GR-VA-042"]
   }
 ]
 ```
@@ -24,7 +24,7 @@ Set `AUTH_MODE=local`. Users come from `LOCAL_USERS_JSON` — a JSON array of:
 Generate an entry without putting the password in shell history or source:
 
 ```bash
-python tools/gen_local_user.py alice store_manager foodlion --stores FL-VA-042
+python tools/gen_local_user.py alice store_manager grocery_demo --stores GR-VA-042
 ```
 
 The tool prompts for the password and prints the JSON entry. Store the result

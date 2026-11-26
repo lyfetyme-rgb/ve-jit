@@ -12,8 +12,9 @@ class ConsoleTenant(Base):
     id = Column(Integer, primary_key=True, index=True)
     tenant_id = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(String(128), nullable=False)
-    vertical = Column(String(64), nullable=False)  # grocery | hardware | home_improvement
+    vertical = Column(String(64), nullable=False)  # grocery | hardware | home_improvement | ...
     description = Column(String(512), nullable=True)
+    sku_prefix = Column(String(16), nullable=True, default="")
 
 
 class ConsoleStore(Base):
