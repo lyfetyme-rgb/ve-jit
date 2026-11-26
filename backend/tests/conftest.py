@@ -16,8 +16,8 @@ TEST_PRINCIPAL = Principal(
     subject="test-principal",
     role="system_admin",
     permissions=ROLE_PERMISSIONS["system_admin"],
-    tenants=frozenset({"foodlion", "acehardware", "lowes"}),
-    stores=frozenset({"FL-VA-042", "ACE-NC-001", "LOW-NC-DC1"}),
+    tenants=frozenset({"grocery_demo", "hardware_demo", "home_improvement_demo"}),
+    stores=frozenset({"GR-VA-042", "HW-NC-001", "HI-NC-DC1"}),
     auth_mode="local",
 )
 

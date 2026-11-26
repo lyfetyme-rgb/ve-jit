@@ -31,7 +31,7 @@ client = TestClient(app)
 
 AUTH = "/api/v1/auth"
 CONSOLE = "/api/v1/console"
-DEMO_REC = "rec_console_FL-VA-042"
+DEMO_REC = "rec_console_GR-VA-042"
 
 
 @pytest.fixture
@@ -61,8 +61,8 @@ def _token(subject="alice", role="store_manager", tenants=None, stores=None) -> 
     return create_access_token(
         subject=subject,
         role=role,
-        tenants=["foodlion", "acehardware", "lowes"] if tenants is None else tenants,
-        stores=["FL-VA-042", "ACE-NC-001", "LOW-NC-DC1"] if stores is None else stores,
+        tenants=["grocery_demo", "hardware_demo", "home_improvement_demo"] if tenants is None else tenants,
+        stores=["GR-VA-042", "HW-NC-001", "HI-NC-DC1"] if stores is None else stores,
     )
 
 
@@ -94,8 +94,8 @@ def test_local_login_from_env_users_and_me(monkeypatch):
         "username": "alice",
         "password_hash": hash_password("correct-horse"),
         "role": "store_manager",
-        "tenants": ["foodlion"],
-        "stores": ["FL-VA-042"],
+        "tenants": ["grocery_demo"],
+        "stores": ["GR-VA-042"],
     }]
     monkeypatch.setattr(settings, "LOCAL_USERS_JSON", json.dumps(users))
     monkeypatch.setattr(settings, "AUTH_MODE", "local")
@@ -111,8 +111,8 @@ def test_local_login_from_env_users_and_me(monkeypatch):
     assert me.status_code == 200, me.text
     body = me.json()
     assert body["subject"] == "alice"
-    assert body["tenants"] == ["foodlion"]
-    assert body["stores"] == ["FL-VA-042"]
+    assert body["tenants"] == ["grocery_demo"]
+    assert body["stores"] == ["GR-VA-042"]
     assert "recommendation:approve" in body["permissions"]
     assert "recommendation:execute" not in body["permissions"]
 
@@ -134,14 +134,14 @@ def test_no_credentials_hardcoded_in_source():
 
 @pytest.mark.no_auth_override
 def test_tenant_scope_comes_from_token_not_query(seeded_db):
-    token = _token(subject="ace-user", tenants=["acehardware"], stores=["ACE-NC-001"])
+    token = _token(subject="hardware-user", tenants=["hardware_demo"], stores=["HW-NC-001"])
     denied = client.get(
-        f"{CONSOLE}/overview?tenant_id=foodlion&store_id=FL-VA-042", headers=_bearer(token)
+        f"{CONSOLE}/overview?tenant_id=grocery_demo&store_id=GR-VA-042", headers=_bearer(token)
     )
     assert denied.status_code == 403
 
     allowed = client.get(
-        f"{CONSOLE}/overview?tenant_id=acehardware&store_id=ACE-NC-001", headers=_bearer(token)
+        f"{CONSOLE}/overview?tenant_id=hardware_demo&store_id=HW-NC-001", headers=_bearer(token)
     )
     assert allowed.status_code == 200, allowed.text
 
@@ -199,7 +199,7 @@ def test_csrf_rejects_foreign_origin_with_cookie(monkeypatch):
 
     foreign = client.post(
         f"{CONSOLE}/orders",
-        json={"tenant_id": "foodlion", "store_id": "FL-VA-042", "lines": []},
+        json={"tenant_id": "grocery_demo", "store_id": "GR-VA-042", "lines": []},
         headers={**_bearer(token), "Origin": "https://evil.example.com", "Cookie": "session=x"},
     )
     assert foreign.status_code == 403
@@ -207,7 +207,7 @@ def test_csrf_rejects_foreign_origin_with_cookie(monkeypatch):
 
     same = client.post(
         f"{CONSOLE}/orders",
-        json={"tenant_id": "foodlion", "store_id": "FL-VA-042", "lines": []},
+        json={"tenant_id": "grocery_demo", "store_id": "GR-VA-042", "lines": []},
         headers={**_bearer(token), "Origin": "https://console.example.com", "Cookie": "session=x"},
     )
     assert same.status_code != 403
@@ -238,7 +238,7 @@ def test_oidc_jwks_verification_and_claim_mapping(monkeypatch):
     token = jwt.encode(
         {
             "sub": "oidc-user", "role": "regional_manager",
-            "vejit_tenants": ["lowes"], "vejit_stores": ["LOW-NC-DC1"],
+            "vejit_tenants": ["home_improvement_demo"], "vejit_stores": ["HI-NC-DC1"],
             "iss": "https://idp.example.com", "aud": "ve-jit-api", "exp": 9_999_999_999,
         },
         pem, algorithm="RS256", headers={"kid": jwk["kid"]},
@@ -246,7 +246,7 @@ def test_oidc_jwks_verification_and_claim_mapping(monkeypatch):
     me = client.get(f"{AUTH}/me", headers=_bearer(token))
     assert me.status_code == 200, me.text
     assert me.json()["subject"] == "oidc-user"
-    assert me.json()["tenants"] == ["lowes"]
+    assert me.json()["tenants"] == ["home_improvement_demo"]
     assert me.json()["auth_mode"] == "oidc"
 
     wrong_aud = jwt.encode(

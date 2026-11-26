@@ -1,8 +1,11 @@
 # Store Console domain package
 
-Multi-tenant registry (`models.py`), idempotent demo seeding (`seed.py`) for
-Food Lion, Ace Hardware and Lowe's, and the SKU-namespace map used by the
-console API. The HTTP surface lives in `app/api/console.py` and the UI in
-`frontend/console/`.
+Config-driven retailer registry (`models.py`), loader (`seed.py`) for tenants,
+stores, SKUs, prices and governed recommendations, and the SKU-namespace lookup
+used by the console API. No retailer names are hardcoded.
 
-Full documentation: `docs/STORE_CONSOLE.md`.
+Default catalog: `config/retailers.demo.json` (generic grocery, hardware and
+home-improvement archetypes). Override with `RETAILER_CONFIG=/path/to/file.json`.
+
+The HTTP surface lives in `app/api/console.py` and the UI in
+`frontend/console/`. Full documentation: `docs/STORE_CONSOLE.md`.

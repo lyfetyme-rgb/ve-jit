@@ -1,13 +1,21 @@
 # VE-JIT Store Console
 
 A working multi-tenant retail application built on the governed VE-JIT core.
-It ships with three demo retail customers:
+**No retailer names are hardcoded.** Companies are loaded from a JSON catalog,
+so the same code can serve any grocery, hardware, home-improvement or other
+retail operation.
 
-| Tenant | Vertical | Demo store | Edge arch | SKU namespace |
-|---|---|---|---|---|
-| Food Lion | Grocery / cold chain | `FL-VA-042` (Richmond, VA) | amd64 | `FL-*` |
-| Ace Hardware | Hardware co-op | `ACE-NC-001` (Raleigh, NC) | arm64 | `ACE-*` |
-| Lowe's | Home improvement / DC | `LOW-NC-DC1` (Charlotte, NC) | amd64 | `LOW-*` |
+## Shipped demo archetypes
+
+`config/retailers.demo.json` contains three generic examples:
+
+| Tenant id | Name | Vertical | Store | Arch | SKU namespace |
+|---|---|---|---|---|---|
+| `grocery_demo` | Demo Grocery Co | grocery | `GR-VA-042` | amd64 | `GR-*` |
+| `hardware_demo` | Demo Hardware Co-op | hardware | `HW-NC-001` | arm64 | `HW-*` |
+| `home_improvement_demo` | Demo Home Improvement Co | home_improvement | `HI-NC-DC1` | amd64 | `HI-*` |
+
+These are intentionally generic archetypes, not real chains.
 
 ## Run it
 
@@ -22,21 +30,69 @@ Open:
 - **Platform dashboard:** http://127.0.0.1:8000/ui/
 - **API docs:** http://127.0.0.1:8000/docs
 
-Demo tenants, stores, SKUs, an order and a recommendation are seeded
-idempotently on startup (and on every test fixture), so restarting never
-duplicates data.
+The catalog is loaded idempotently on startup (and in test fixtures), so
+restarting never duplicates data.
+
+## Load your own companies
+
+Copy the demo catalog and edit it:
+
+```bash
+cp config/retailers.demo.json config/my-retailers.json
+```
+
+Each retailer entry:
+
+```json
+{
+  "tenant_id": "my_customer",
+  "name": "My Customer",
+  "vertical": "grocery",
+  "description": "Any descriptive text",
+  "sku_prefix": "MC-",
+  "stores": [
+    { "store_id": "MC-001", "name": "Main Store", "location": "Anywhere, US",
+      "architecture": "amd64", "channel": "store" }
+  ],
+  "catalog": [
+    { "sku": "MC-100", "name": "Example Item", "price": 4.99,
+      "quantity": 40, "reorder_point": 10 }
+  ]
+}
+```
+
+Then either set the environment variable before starting the backend:
+
+```
+RETAILER_CONFIG=/absolute/path/to/my-retailers.json
+```
+
+or load it explicitly against any database:
+
+```bash
+python tools/load_retailers.py config/my-retailers.json --db sqlite:///./vejit.db
+```
+
+Adding a company is a **data change, not a code change**. Multiple retailers,
+multiple stores per retailer, and arbitrary verticals are supported. The
+loader validates required fields before writing anything.
+
+`sku_prefix` scopes inventory reads per tenant; it is stored on the tenant
+record, so no code map needs editing.
 
 ## What a store can actually do
 
 | Action | Route | Governance |
 |---|---|---|
-| Switch tenant/store | UI dropdowns | Every route validates the tenant→store relationship; cross-tenant reads return 404 |
+| Switch tenant/store | UI dropdowns | Every route validates the tenant→store relationship and the token scopes; cross-tenant reads return 403/404 |
 | View KPIs + posture | `GET /api/v1/console/overview` | Reads only; includes PCI scope and BENGAL metadata |
-| View stock | `GET /api/v1/console/inventory` | Scoped to tenant SKU namespace |
+| View stock | `GET /api/v1/console/inventory` | Scoped to the tenant's SKU namespace |
 | Post a POS sale | `POST /api/v1/console/orders` | Commerce `place_order`; cardholder data rejected with 422 before parsing |
-| Approve a recommendation | `POST /api/v1/console/recommendations/{uid}/approve` | Human named in `actor`; cross-tenant approval refused |
-| Execute a recommendation | `POST /api/v1/console/recommendations/{uid}/execute` | Reuses the Operations executor; hard safety gates enforced (fail-closed); PROPOSED → 409 |
+| Approve a recommendation | `POST /api/v1/console/recommendations/{uid}/approve` | Actor bound to token; role `store_manager`+ required |
+| Execute a recommendation | `POST /api/v1/console/recommendations/{uid}/execute` | Reuses Operations executor; hard safety gates fail closed; 409 before approval |
 | View execution ledger | `GET /api/v1/console/audit` | Append-only inventory ledger + authorized action trail |
+
+All routes require a bearer token — see `docs/IDENTITY_AUTHORIZATION.md`.
 
 ## Three-plane boundary (unchanged)
 
@@ -50,17 +106,6 @@ append-only ledgers used everywhere else in VE-JIT. There is no separate
 console database, no console-only policy bypass, and no credentials in the
 static bundle.
 
-## Multi-tenancy notes
-
-Tenant scoping is enforced in `_store()` on every data route. The demo tenants
-are seeded rows in `console_tenants` / `console_stores`; adding a real retailer
-is a data change, not a code change. SKU namespaces are explicit in
-`app/console/seed.py::TENANT_SKU_PREFIXES` so short codes stay stable.
-
-`Recommendation` gained nullable `tenant_id` / `store_id` columns for scoping;
-older rows remain valid (nullable), and `ensure_version_columns()` applies the
-additive migration to existing SQLite databases at startup.
-
 ## Tests
 
 ```bash
@@ -68,7 +113,7 @@ cd backend
 ./.venv-win/Scripts/python.exe -m pytest tests/test_store_console.py -q
 ```
 
-Covers: three verticals present, idempotent seed, tenant-scoped reads,
+Covers: three verticals present, idempotent load, tenant-scoped reads,
 cross-tenant rejection, UI mount, full propose→approve→execute→audit flow
 including the pre-approval 409 gate, and PCI rejection of card data.
 

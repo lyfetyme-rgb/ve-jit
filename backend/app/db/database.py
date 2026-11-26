@@ -42,6 +42,12 @@ def ensure_version_columns() -> None:
             except Exception:
                 conn.execute(text(f"ALTER TABLE recommendations ADD COLUMN {ddl}"))
 
+        # SKU namespace for config-loaded retailers (new console tenant column).
+        try:
+            conn.execute(text("SELECT sku_prefix FROM console_tenants LIMIT 0"))
+        except Exception:
+            conn.execute(text("ALTER TABLE console_tenants ADD COLUMN sku_prefix TEXT"))
+
         # Priority lane added to the Atlassian outbox after the first release.
         try:
             conn.execute(text("SELECT priority FROM int_atlassian_outbox LIMIT 0"))

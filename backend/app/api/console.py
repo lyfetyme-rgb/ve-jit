@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.console.models import ConsoleStore, ConsoleTenant
-from app.console.seed import sku_prefix
+from app.console.seed import get_sku_prefix
 from app.db.database import get_db
 from app.db.models import InventoryItem
 from app.edge.contracts import SCHEMA_VERSION
@@ -93,7 +93,7 @@ def inventory(
 ):
     require_store(principal, tenant_id, store_id)
     _store(db, tenant_id, store_id)
-    prefix = sku_prefix(tenant_id)
+    prefix = get_sku_prefix(db, tenant_id)
     items = db.query(InventoryItem).filter(InventoryItem.sku.like(prefix + "%")).order_by(InventoryItem.sku.asc()).all()
     return {
         "store_id": store_id,
@@ -117,7 +117,7 @@ def overview(
 ):
     require_store(principal, tenant_id, store_id)
     _store(db, tenant_id, store_id)
-    prefix = sku_prefix(tenant_id)
+    prefix = get_sku_prefix(db, tenant_id)
     items = db.query(InventoryItem).filter(InventoryItem.sku.like(prefix + "%")).all()
     recs = db.query(Recommendation).filter(Recommendation.tenant_id == tenant_id, Recommendation.store_id == store_id).all()
     orders = db.query(CommerceOrder).filter(CommerceOrder.store_id == store_id).all()
