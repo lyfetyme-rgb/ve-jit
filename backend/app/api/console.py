@@ -25,6 +25,13 @@ from app.planes.governance import (
     get_recommendation,
 )
 from app.planes.models import CommerceOrder, Recommendation, InventoryLedgerEntry
+from app.security.principal import (
+    Principal,
+    require_actor,
+    require_permission,
+    require_store,
+    require_tenant,
+)
 
 router = APIRouter(prefix="/api/v1/console", tags=["console"])
 
@@ -61,7 +68,10 @@ def _store(db: Session, tenant_id: str, store_id: str) -> ConsoleStore:
 
 
 @router.get("/catalog")
-def catalog(db: Session = Depends(get_db)):
+def catalog(
+    db: Session = Depends(get_db),
+    _principal: Principal = Depends(require_permission("read:console")),
+):
     tenants = (
         [{"tenant_id": t.tenant_id, "name": t.name, "vertical": t.vertical, "description": t.description}
          for t in db.query(ConsoleTenant).order_by(ConsoleTenant.id.asc()).all()]
@@ -75,7 +85,13 @@ def catalog(db: Session = Depends(get_db)):
 
 
 @router.get("/inventory")
-def inventory(tenant_id: str, store_id: str, db: Session = Depends(get_db)):
+def inventory(
+    tenant_id: str,
+    store_id: str,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("read:console")),
+):
+    require_store(principal, tenant_id, store_id)
     _store(db, tenant_id, store_id)
     prefix = sku_prefix(tenant_id)
     items = db.query(InventoryItem).filter(InventoryItem.sku.like(prefix + "%")).order_by(InventoryItem.sku.asc()).all()
@@ -93,7 +109,13 @@ def inventory(tenant_id: str, store_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/overview")
-def overview(tenant_id: str, store_id: str, db: Session = Depends(get_db)):
+def overview(
+    tenant_id: str,
+    store_id: str,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("read:console")),
+):
+    require_store(principal, tenant_id, store_id)
     _store(db, tenant_id, store_id)
     prefix = sku_prefix(tenant_id)
     items = db.query(InventoryItem).filter(InventoryItem.sku.like(prefix + "%")).all()
@@ -118,7 +140,13 @@ def overview(tenant_id: str, store_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/recommendations")
-def recommendations(tenant_id: str, store_id: str, db: Session = Depends(get_db)):
+def recommendations(
+    tenant_id: str,
+    store_id: str,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("read:console")),
+):
+    require_store(principal, tenant_id, store_id)
     _store(db, tenant_id, store_id)
     rows = (
         db.query(Recommendation)
@@ -138,12 +166,20 @@ def recommendations(tenant_id: str, store_id: str, db: Session = Depends(get_db)
 
 
 @router.post("/recommendations/{uid}/approve")
-def approve(uid: str, payload: ActorIn, db: Session = Depends(get_db)):
-    rec = get_recommendation(db, uid)
-    if payload.tenant_id and rec.tenant_id and rec.tenant_id != payload.tenant_id:
-        raise HTTPException(status_code=403, detail="Cross-tenant recommendation approval refused")
+def approve(
+    uid: str,
+    payload: ActorIn,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("recommendation:approve")),
+):
     try:
-        updated = approve_recommendation(db, uid, approver=payload.actor, note=payload.note)
+        rec = get_recommendation(db, uid)
+    except RecommendationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+    require_tenant(principal, rec.tenant_id or "")
+    require_actor(principal, payload.actor)
+    try:
+        updated = approve_recommendation(db, uid, approver=principal.subject, note=payload.note)
     except RecommendationError as exc:
         db.rollback()
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
@@ -151,15 +187,34 @@ def approve(uid: str, payload: ActorIn, db: Session = Depends(get_db)):
 
 
 @router.post("/recommendations/{uid}/execute")
-def execute(uid: str, payload: ActorIn, db: Session = Depends(get_db)):
+def execute(
+    uid: str,
+    payload: ActorIn,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("recommendation:execute")),
+):
+    try:
+        rec = get_recommendation(db, uid)
+    except RecommendationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+    require_tenant(principal, rec.tenant_id or "")
+    require_actor(principal, payload.actor)
     # Reuse the governed Operations executor — no console-specific execution path.
     from app.api.operations import ExecuteRecommendation, execute_recommendation
 
-    return execute_recommendation(uid, ExecuteRecommendation(actor=payload.actor, note=payload.note), db)
+    return execute_recommendation(
+        uid, ExecuteRecommendation(actor=principal.subject, note=payload.note), db
+    )
 
 
 @router.post("/orders", status_code=201)
-def sale(payload: SaleIn, db: Session = Depends(get_db), _pci: None = Depends(forbid_cardholder_data_body("console.sale"))):
+def sale(
+    payload: SaleIn,
+    db: Session = Depends(get_db),
+    _pci: None = Depends(forbid_cardholder_data_body("console.sale")),
+    principal: Principal = Depends(require_permission("sale:create")),
+):
+    require_store(principal, payload.tenant_id, payload.store_id)
     _store(db, payload.tenant_id, payload.store_id)
     try:
         order, created = place_order(
@@ -179,7 +234,14 @@ def sale(payload: SaleIn, db: Session = Depends(get_db), _pci: None = Depends(fo
 
 
 @router.get("/audit")
-def audit(tenant_id: str, store_id: str, limit: int = 50, db: Session = Depends(get_db)):
+def audit(
+    tenant_id: str,
+    store_id: str,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("read:console")),
+):
+    require_store(principal, tenant_id, store_id)
     _store(db, tenant_id, store_id)
     entries = (
         db.query(InventoryLedgerEntry)
