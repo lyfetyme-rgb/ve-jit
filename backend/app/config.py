@@ -88,6 +88,29 @@ class Settings(BaseSettings):
     ATLASSIAN_STORM_WINDOW_SECONDS: int = 300
     ATLASSIAN_STORM_KEY_PREFIX: str = "vejit-store-health"
 
+    # ---------------------------------------------------------------- identity & access (Phase 1)
+    # local = signed HS256 tokens issued by /api/v1/auth/login from env-configured users.
+    # oidc  = RS256 tokens issued by the corporate IdP and verified against its JWKS.
+    AUTH_MODE: str = "local"
+    JWT_ISSUER: str = "ve-jit"
+    JWT_AUDIENCE: str = "ve-jit-api"
+    # JSON array of local users. Never hardcode credentials in source.
+    # Each entry: {"username","password_hash","role","tenants":[...],"stores":[...]}
+    LOCAL_USERS_JSON: str = ""
+    OIDC_ISSUER: str = ""
+    OIDC_AUDIENCE: str = ""
+    OIDC_JWKS_URL: str = ""
+    OIDC_JWKS_CACHE_SECONDS: int = 300
+    OIDC_ROLE_CLAIM: str = "role"
+    OIDC_TENANT_CLAIM: str = "vejit_tenants"
+    OIDC_STORE_CLAIM: str = "vejit_stores"
+
+    # Request-scoped defences. Rate limiting is per-process; use a shared store
+    # (Redis) when running more than one replica.
+    RATE_LIMIT_PER_MINUTE: int = 120
+    RATE_LIMIT_BURST: int = 20
+    CSRF_ENFORCE: bool = True
+
     SECRET_KEY: str = "change-me-in-production-use-long-random-string"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

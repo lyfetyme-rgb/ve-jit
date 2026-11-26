@@ -1,5 +1,13 @@
 async function fetchJson(url, options) {
-  const response = await fetch(url, options);
+  const opts = {
+    ...(options || {}),
+    headers: { ...((options || {}).headers || {}), ...window.VEJIT_AUTH.headers() },
+  };
+  const response = await fetch(url, opts);
+  if (response.status === 401) {
+    window.VEJIT_AUTH.clearToken();
+    throw new Error("Session expired or missing — use Sign in");
+  }
   const data = await response.json();
   if (!response.ok) throw new Error(JSON.stringify(data));
   return data;
@@ -160,9 +168,16 @@ async function loadAnomalies() {
   if (el) el.textContent = JSON.stringify(data.anomalies.slice(0, 15), null, 2);
 }
 
-Promise.all([loadHealth(), loadQueue(), loadJit(), listInventory(), loadPlanes(), loadEdge()]).catch(err => {
-  console.error(err);
-});
+async function boot() {
+  if (!window.VEJIT_AUTH.getToken()) {
+    const ok = await window.VEJIT_AUTH.login();
+    if (!ok) return;
+  }
+  await Promise.all([loadHealth(), loadQueue(), loadJit(), listInventory(), loadPlanes(), loadEdge()]);
+  await Promise.all([loadNetworkInsights(), loadPercentile()]);
+}
+
+boot().catch(err => console.error(err));
 
 async function loadNetworkInsights() {
   const data = await fetchJson("/api/v1/network/insights");
@@ -176,5 +191,3 @@ async function loadPercentile() {
   if (el) el.textContent = JSON.stringify(data, null, 2);
 }
 
-loadNetworkInsights().catch(console.error);
-loadPercentile().catch(console.error);

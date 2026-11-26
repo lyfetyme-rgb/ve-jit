@@ -8,7 +8,15 @@ function api(path) {
 }
 
 async function json(path, options) {
-  const response = await fetch(api(path), options);
+  const opts = {
+    ...(options || {}),
+    headers: { ...((options || {}).headers || {}), ...window.VEJIT_AUTH.headers() },
+  };
+  const response = await fetch(api(path), opts);
+  if (response.status === 401) {
+    window.VEJIT_AUTH.clearToken();
+    throw new Error("Session expired or missing — use Sign in");
+  }
   const body = await response.json();
   if (!response.ok) throw new Error(body.detail ? JSON.stringify(body.detail) : JSON.stringify(body));
   return body;
@@ -18,6 +26,14 @@ const state = { tenants: [], stores: [], tenantId: '', storeId: '', actor: 'stor
 const $ = (id) => document.getElementById(id);
 
 async function boot() {
+  if (!window.VEJIT_AUTH.getToken()) {
+    const ok = await window.VEJIT_AUTH.login();
+    if (!ok) throw new Error('Sign-in required');
+  }
+  const me = await json('/api/v1/auth/me');
+  state.actor = me.subject;
+  $('actorInput').value = me.subject;
+
   const catalog = await json('/api/v1/console/catalog');
   state.tenants = catalog.tenants;
   state.stores = catalog.stores;

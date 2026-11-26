@@ -107,14 +107,15 @@ def test_pos_sale_and_governed_recommendation_flow():
     uid = rec["uid"]
 
     # Execute before approval must be refused by the governance gate.
-    early = client.post(f"/api/v1/console/recommendations/{uid}/execute", json={"actor": "ops-1"})
+    early = client.post(f"/api/v1/console/recommendations/{uid}/execute", json={"actor": "test-principal"})
     assert early.status_code == 409
 
     approved = client.post(f"/api/v1/console/recommendations/{uid}/approve", json={
-        "actor": "manager-1", "tenant_id": "foodlion", "note": "console test"
+        "actor": "test-principal", "tenant_id": "foodlion", "note": "console test"
     })
     assert approved.status_code == 200, approved.text
-    executed = client.post(f"/api/v1/console/recommendations/{uid}/execute", json={"actor": "ops-1"})
+    assert approved.json()["approved_by"] == "test-principal"
+    executed = client.post(f"/api/v1/console/recommendations/{uid}/execute", json={"actor": "test-principal"})
     assert executed.status_code == 200, executed.text
     assert executed.json()["recommendation"]["status"] == "EXECUTED"
 

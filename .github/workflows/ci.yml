@@ -13,6 +13,9 @@ on:
       - staging
       - main
       - production
+      # Stacked feature PRs must pass the same gate before they reach main.
+      - 'feat/**'
+      - 'fix/**'
 
 jobs:
   test:

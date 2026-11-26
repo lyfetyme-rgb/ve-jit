@@ -18,7 +18,8 @@
     <div class="controls">
       <label>Tenant <select id="tenantSelect"></select></label>
       <label>Store <select id="storeSelect"></select></label>
-      <label>Actor <input id="actorInput" value="store-manager" /></label>
+      <label>Actor <input id="actorInput" value="store-manager" readonly /></label>
+      <button id="authButton" class="secondary">Sign in</button>
       <span id="storeArch" class="tag">—</span>
     </div>
   </header>
@@ -82,6 +83,7 @@
     </section>
   </main>
 
+  <script src="auth.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>

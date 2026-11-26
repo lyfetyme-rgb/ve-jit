@@ -5,12 +5,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 
 from app.config import settings
+from app.security.middleware import CSRFMiddleware, RateLimitMiddleware
+from app.security.principal import get_current_principal
 from app.db.database import Base, engine
 from app.planes import models as plane_models  # noqa: F401  (register plane tables with create_all)
 from app.console import models as console_models  # noqa: F401  (register store console tables)
@@ -127,28 +129,38 @@ app.add_middleware(
 )
 
 app.add_middleware(AuditLogMiddleware)
+app.add_middleware(CSRFMiddleware)
+app.add_middleware(RateLimitMiddleware)
 
-app.include_router(health_router)
-app.include_router(inventory_router)
-app.include_router(queue_router)
-app.include_router(iot_router)
-app.include_router(analytics_router)
-app.include_router(jit_router)
-app.include_router(auth_router)
-app.include_router(network_intelligence_router)
-app.include_router(compliance_router)
-app.include_router(planes_router)
-app.include_router(commerce_router)
-app.include_router(operations_router)
-app.include_router(intelligence_router)
-app.include_router(edge_router)
-app.include_router(cloud_router)
-app.include_router(cloud_replay_router)
-app.include_router(assurance_router)
-app.include_router(console_router)
-app.include_router(release_loop_router)
-app.include_router(self_healing_router)
-app.include_router(outbox_router)
+
+def _protected(router):
+    """All API routers require a verified bearer token, except liveness probes
+    and the login endpoint itself (which needs no prior token)."""
+
+    app.include_router(router, dependencies=[Depends(get_current_principal)])
+
+
+app.include_router(health_router)  # liveness/readiness probes stay public
+app.include_router(auth_router)  # /login is public; /me enforces its own auth
+_protected(inventory_router)
+_protected(queue_router)
+_protected(iot_router)
+_protected(analytics_router)
+_protected(jit_router)
+_protected(network_intelligence_router)
+_protected(compliance_router)
+_protected(planes_router)
+_protected(commerce_router)
+_protected(operations_router)
+_protected(intelligence_router)
+_protected(edge_router)
+_protected(cloud_router)
+_protected(cloud_replay_router)
+_protected(assurance_router)
+_protected(console_router)
+_protected(release_loop_router)
+_protected(self_healing_router)
+_protected(outbox_router)
 
 frontend_candidates = [
     Path(__file__).resolve().parents[2] / "frontend",  # repo layout: backend/app/main.py -> repo root

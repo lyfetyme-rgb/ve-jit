@@ -44,3 +44,12 @@ th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spa
 .sale-line .qty { flex: 0 0 90px; }
 .error { color: var(--red); padding: 24px; }
 @media (max-width: 700px) { .controls { align-items: stretch; } .panels { grid-template-columns: 1fr; } }
+
+/* VE-JIT sign-in dialog */
+.vejit-login-overlay { position: fixed; inset: 0; background: #050a12dd; display: none; align-items: center; justify-content: center; z-index: 1000; }
+.vejit-login-card { background: #111c2e; border: 1px solid #24344d; border-radius: 14px; padding: 24px; width: min(360px, 92vw); display: grid; gap: 10px; }
+.vejit-login-card h3 { margin: 0 0 4px; }
+.vejit-login-card input { background: #0b1626; color: #e6eef8; border: 1px solid #24344d; border-radius: 8px; padding: 10px; }
+.vejit-login-actions { display: flex; gap: 8px; }
+.vejit-login-error { color: #ff6b6b; font-size: 12px; min-height: 16px; margin: 0; }
+.vejit-secondary { background: #1d2d44; color: #e6eef8; border: 1px solid #24344d; }
