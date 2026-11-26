@@ -216,6 +216,8 @@ class Recommendation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     uid = Column(String(64), unique=True, index=True, nullable=False)
+    tenant_id = Column(String(64), nullable=True, index=True)
+    store_id = Column(String(64), nullable=True, index=True)
     version = Column(Integer, nullable=False, server_default="1", default=1)
     plane = Column(String(32), nullable=False, default="intelligence")
     kind = Column(String(64), index=True, nullable=False)  # REPLENISHMENT|TRANSFER|WASTE_REVIEW|WORKFORCE_GUIDANCE|...

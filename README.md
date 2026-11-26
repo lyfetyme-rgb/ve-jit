@@ -26,6 +26,7 @@ queue management, procurement automation, and supply-chain visibility.
 - **Release manifests** — `releases/<tag>/manifest.json` attaches to every GitHub Release automatically: the SKU → release mapping with per-file SHA256 for both platform bundles (see `releases/README.md`)
 - **Migrations** — `infrastructure/migrations/` forward-only numbered SQL migrations (0000 baseline, 0001 append-only triggers, 0002 cloud reconciliation) with an idempotent dependency-free runner (`--status`, `--baseline`, `--db`)
 - **Edge sidecars** — `services/hardware_adapter/`: C++ UDS daemon (systemd-sandboxed) for SDK-side bridges; `services/sync-go/`: Go replay classifier (commutative sales vs quarantine) for the recovery gate's replay step. Both are stateless; the Python edge is the single owner of local state, policy and audit. See `services/README.md`
+- **Store Console** — a working multi-tenant retail app at `/console/` with Food Lion, Ace Hardware and Lowe's demo tenants: tenant/store switcher, KPIs, inventory, POS sales, governed propose→approve→execute recommendations, and an execution ledger. Thin surface over the same domain services and safety gates — no separate DB or policy bypass. See `docs/STORE_CONSOLE.md`
 - HTML dashboard UI served by FastAPI (includes a live Three Planes panel, PCI posture card and read-only BENGAL BAA assurance card)
 - PostgreSQL + Redis + Kafka + Prometheus + Grafana Docker stack
 - Tests, CI workflow, verification and deployment scripts

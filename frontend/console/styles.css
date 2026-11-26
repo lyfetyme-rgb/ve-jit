@@ -1,0 +1,46 @@
+:root { --bg: #0b1220; --panel: #111c2e; --line: #24344d; --text: #e6eef8; --muted: #9fb0c8; --accent: #5aa9ff; --green: #35c78a; --amber: #f5b642; --red: #ff6b6b; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 Inter, Segoe UI, Arial, sans-serif; }
+.topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 28px; background: #0d1726; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 14px; }
+.logo { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(135deg, #3b82f6, #7c3aed); font-weight: 800; font-size: 20px; }
+h1 { font-size: 18px; margin: 0; }
+.sub { margin: 0; color: var(--muted); font-size: 12px; }
+.controls { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.controls label { display: grid; gap: 4px; font-size: 11px; color: var(--muted); }
+select, input { background: #0b1626; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 160px; }
+.tag { border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; color: var(--muted); font-size: 12px; }
+.tabs { display: flex; gap: 6px; padding: 12px 28px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { background: transparent; border: 1px solid transparent; color: var(--muted); padding: 9px 15px; border-radius: 9px; cursor: pointer; }
+.tab:hover { color: var(--text); }
+.tab.active { background: #16243a; border-color: var(--line); color: var(--text); }
+main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+.view { display: none; }
+.view.active { display: block; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 6px; }
+.kpi span { color: var(--muted); font-size: 12px; }
+.kpi strong { font-size: 24px; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.panel h2 { margin: 0 0 12px; font-size: 15px; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.note, .muted { color: var(--muted); font-size: 12px; }
+button { background: var(--accent); color: #06101c; border: none; border-radius: 8px; padding: 9px 14px; font-weight: 700; cursor: pointer; }
+button.secondary { background: #1d2d44; color: var(--text); border: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: 13px; }
+th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid var(--line); }
+.pill.ok, .pill.paid, .pill.executed { color: var(--green); border-color: var(--green); }
+.pill.low, .pill.proposed, .pill.approved { color: var(--amber); border-color: var(--amber); }
+.pill.out, .pill.rejected, .pill.blocked { color: var(--red); border-color: var(--red); }
+.result { background: #070e19; border: 1px solid var(--line); border-radius: 9px; padding: 12px; min-height: 70px; max-height: 320px; overflow: auto; font-size: 12px; }
+.rec { background: #0d1726; border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.rec p { margin: 6px 0; }
+.rec button { margin-right: 8px; }
+.sale-line { display: flex; gap: 8px; margin-bottom: 8px; }
+.sale-line input { min-width: 0; flex: 1; }
+.sale-line .qty { flex: 0 0 90px; }
+.error { color: var(--red); padding: 24px; }
+@media (max-width: 700px) { .controls { align-items: stretch; } .panels { grid-template-columns: 1fr; } }

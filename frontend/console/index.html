@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VE-JIT Store Console</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">V</span>
+      <div>
+        <h1>VE-JIT Store Console</h1>
+        <p class="sub">Governed retail operations — Commerce · Operations · Intelligence</p>
+      </div>
+    </div>
+    <div class="controls">
+      <label>Tenant <select id="tenantSelect"></select></label>
+      <label>Store <select id="storeSelect"></select></label>
+      <label>Actor <input id="actorInput" value="store-manager" /></label>
+      <span id="storeArch" class="tag">—</span>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-view="overview">Overview</button>
+    <button class="tab" data-view="inventory">Inventory</button>
+    <button class="tab" data-view="sales">Sell (POS)</button>
+    <button class="tab" data-view="replenish">Replenishment</button>
+    <button class="tab" data-view="audit">Audit</button>
+    <button class="tab" data-view="about">Platform</button>
+  </nav>
+
+  <main>
+    <section class="view active" id="view-overview">
+      <div class="kpis" id="kpis"></div>
+      <div class="panels">
+        <article class="panel"><h2>Governance</h2><p id="govRule" class="note"></p><div id="planeSummary"></div></article>
+        <article class="panel"><h2>Continuity &amp; compliance</h2><div id="posture"></div></article>
+      </div>
+    </section>
+
+    <section class="view" id="view-inventory">
+      <div class="panel-head"><h2>Inventory by store</h2><button id="refreshInventory">Refresh</button></div>
+      <table id="inventoryTable"><thead><tr><th>SKU</th><th>Item</th><th>On hand</th><th>Reorder at</th><th>Status</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section class="view" id="view-sales">
+      <div class="panels">
+        <article class="panel">
+          <h2>New POS transaction</h2>
+          <p class="note">Commerce owns the customer-facing transaction. No cardholder data is accepted.</p>
+          <div id="saleLines"></div>
+          <button class="secondary" id="addLine">+ Add line</button>
+          <button id="submitSale">Post sale</button>
+          <pre id="saleResult" class="result">Ready.</pre>
+        </article>
+        <article class="panel"><h2>Recent transactions</h2><pre id="recentOrders" class="result">Loading…</pre></article>
+      </div>
+    </section>
+
+    <section class="view" id="view-replenish">
+      <div class="panel-head"><h2>Recommendation queue</h2><button id="refreshRecs">Refresh</button></div>
+      <p class="note">Intelligence proposes. A named human approves. Operations executes.</p>
+      <div id="recList"></div>
+    </section>
+
+    <section class="view" id="view-audit">
+      <div class="panel-head"><h2>Execution ledger</h2><button id="refreshAudit">Refresh</button></div>
+      <div class="panels">
+        <article class="panel"><h2>Stock movements</h2><pre id="ledgerList" class="result">Loading…</pre></article>
+        <article class="panel"><h2>Authorized actions</h2><pre id="actionList" class="result">Loading…</pre></article>
+      </div>
+    </section>
+
+    <section class="view" id="view-about">
+      <div class="panels">
+        <article class="panel"><h2>Three planes</h2><pre id="planes" class="result">Loading…</pre></article>
+        <article class="panel"><h2>Independent assurance &amp; PCI</h2><pre id="assurance" class="result">Loading…</pre></article>
+      </div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
