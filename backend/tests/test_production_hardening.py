@@ -115,6 +115,18 @@ def test_sale_response_includes_payment_authorization():
         app.dependency_overrides.pop(get_db, None)
 
 
+def test_release_manifest_records_commit():
+    """Release manifests must carry the commit SHA for traceability."""
+    yaml = pytest.importorskip("yaml")
+    root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    workflow = os.path.join(root, ".github", "workflows", "release.yml")
+    with open(workflow, encoding="utf-8") as handle:
+        text = handle.read()
+        assert yaml.safe_load(text)  # valid workflow YAML
+    assert "--commit" in text
+    assert "github.sha" in text
+
+
 def test_production_deployment_artifacts_are_valid():
     yaml = pytest.importorskip("yaml")
     root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

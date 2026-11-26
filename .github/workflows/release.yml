@@ -146,7 +146,7 @@ jobs:
         run: |
           cd "${{ github.workspace }}"
           VERSION="$(ls release-assets/vendarix-edge_*.tar.gz | head -1 | sed -E 's/^.*vendarix-edge_(.*)_[^_]+\.tar\.gz$/\1/')"
-          python tools/release_manifest.py --local-dir release-assets --version "v${VERSION}" --out release-assets/manifest.json
+          python tools/release_manifest.py --local-dir release-assets --version "v${VERSION}" --commit "${{ github.sha }}" --out release-assets/manifest.json
           cat release-assets/manifest.json | python -c "import json,sys; m=json.load(sys.stdin); print('manifest OK:', sum(p['file_count'] for p in m['platforms'].values()), 'files across', len(m['platforms']), 'platforms')"
 
       - name: Create GitHub Release
